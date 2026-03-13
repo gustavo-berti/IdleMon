@@ -1,0 +1,72 @@
+:root {
+  --poke-red: #ee1515;
+  --poke-blue: #222224;
+  --poke-yellow: #ffcc00;
+  --poke-yellow-hover: #d4a100;
+  --bg-light: #f0f0f0;
+}
+
+body {
+  background-color: var(--bg-light);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-custom {
+  background-color: var(--poke-red);
+  border-bottom: 4px solid #222224;
+}
+
+.btn-poke {
+  background-color: var(--poke-yellow);
+  color: #333;
+  font-weight: bold;
+  border: 1px solid #222224;
+}
+
+.btn-poke:hover {
+  background-color: var(--poke-yellow-hover);
+  color: #000;
+}
+
+/* Área das Boxes e Time */
+.box-container {
+  background-color: white;
+  border: 3px solid var(--poke-blue);
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 300px;
+}
+
+.team-slot {
+  width: 80px;
+  height: 80px;
+  border: 2px dashed #aaa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.team-slot:hover {
+  border-color: var(--poke-red);
+  background-color: #ffe6e6;
+}
+
+main {
+  flex: 1;
+  /* Faz o main crescer e empurrar o footer pra baixo */
+  padding-top: 80px;
+  /* Espaço para a navbar fixa */
+}
+
+footer {
+  background-color: var(--poke-blue);
+  color: white;
+  border-top: 4px solid var(--poke-red);
+}
