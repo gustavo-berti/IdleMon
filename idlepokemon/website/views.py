@@ -1,4 +1,7 @@
 from django.views.generic import TemplateView
 
 class HomeView(TemplateView):
-    template_name = 'website/home.html'
+    def get_template_names(self):
+        if self.request.user.is_authenticated:
+            return ['website/userLoggedIn.html']
+        return ['website/home.html']
