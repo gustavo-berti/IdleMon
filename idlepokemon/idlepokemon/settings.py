@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'accounts.apps.AccountsConfig',
+    'pokemon.apps.PokemonConfig',
     'website.apps.WebsiteConfig',
 ]
 
