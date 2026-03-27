@@ -1,0 +1,15 @@
+{% extends "website/template.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}IdleMon - Formulário{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="mb-4">{{ form_title|default:'Formulário' }}</h2>
+  <form method="post" action="{% url form_action|default:'login' %}">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-poke">{{ submit_label|default:'Enviar' }}</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "website/template.html" %}
+
+{% block title %}Minha Conta{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title mb-4">Minha Conta</h2>
+      <p class="mb-2"><strong>Usuário:</strong> {{ account.username }}</p>
+      <p class="mb-2"><strong>Email:</strong> {{ account.email|default:'-' }}</p>
+      <p class="mb-4"><strong>Membro desde:</strong> {{ account.date_joined|date:'d/m/Y H:i' }}</p>
+      <a class="btn btn-poke me-2" href="{% url 'account_update' %}">Editar Conta</a>
+      <a class="btn btn-outline-danger" href="{% url 'account_delete' %}">Excluir Conta</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

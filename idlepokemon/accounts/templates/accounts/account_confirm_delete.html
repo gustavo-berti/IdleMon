@@ -1,0 +1,20 @@
+{% extends "website/template.html" %}
+
+{% block title %}Excluir Conta{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="card border-danger shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-danger mb-3">Excluir Conta</h2>
+      <p class="mb-4">Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.</p>
+
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger me-2">Excluir Conta</button>
+        <a href="{% url 'account_detail' %}" class="btn btn-secondary">Cancelar</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{% url 'home' %}">IdleMon</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav align-items-center">
+        {% if user.is_authenticated %}
+        <li class="nav-item me-4 text-white fw-bold">🪙 Saldo: 1500</li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle text-white fw-bold"
+            href="#"
+            id="navbarDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+          >
+            Olá, {{ user.username }}!
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'account_detail' %}">Meu Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Loja de Ovos</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item text-danger">Sair</button>
+              </form>
+            </li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item me-2">
+          <a class="nav-link text-white" href="{% url 'login' %}">Entrar</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-poke btn-sm" href="{% url 'register' %}">Criar Conta</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
