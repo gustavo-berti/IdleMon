@@ -5,3 +5,7 @@ class HomeView(TemplateView):
         if self.request.user.is_authenticated:
             return ['website/userLoggedIn.html']
         return ['website/home.html']
+    
+class AboutView(TemplateView):
+    def get_template_names(self):
+        return ['website/about.html']
