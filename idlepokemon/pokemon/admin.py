@@ -5,30 +5,30 @@ from .models import Box, Especie, Ovo, PokemonInstancia, TipoPokemon
 
 @admin.register(TipoPokemon)
 class TipoPokemonAdmin(admin.ModelAdmin):
-	list_display = ("id", "nome", "valor_base_geracao")
-	search_fields = ("nome",)
+	list_display = ("id", "name", "base_generation_value")
+	search_fields = ("name",)
 
 
 @admin.register(Especie)
 class EspecieAdmin(admin.ModelAdmin):
-	list_display = ("id", "nome", "estagio_evolucao")
-	search_fields = ("nome",)
-	filter_horizontal = ("tipos",)
+	list_display = ("id", "name", "evolution_stage")
+	search_fields = ("name",)
+	filter_horizontal = ("types",)
 
 
 @admin.register(Box)
 class BoxAdmin(admin.ModelAdmin):
-	list_display = ("id", "nome", "perfil_treinador", "slots_max")
-	search_fields = ("nome", "perfil_treinador__user__username")
+	list_display = ("id", "name", "trainer_profile", "slots_max")
+	search_fields = ("name", "trainer_profile__user__username")
 
 
 @admin.register(PokemonInstancia)
 class PokemonInstanciaAdmin(admin.ModelAdmin):
-	list_display = ("id", "apelido", "especie", "box", "data_nascimento")
-	search_fields = ("apelido", "especie__nome", "box__nome")
+	list_display = ("id", "nickname", "species", "box", "birth_date")
+	search_fields = ("nickname", "species__name", "box__name")
 
 
 @admin.register(Ovo)
 class OvoAdmin(admin.ModelAdmin):
-	list_display = ("id", "nome", "perfil_treinador", "tipo", "especie", "preco")
-	search_fields = ("nome", "perfil_treinador__user__username", "especie__nome", "tipo__nome")
+	list_display = ("id", "name", "trainer_profile", "type", "species", "price")
+	search_fields = ("name", "trainer_profile__user__username", "species__name", "type__name")

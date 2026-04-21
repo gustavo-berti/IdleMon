@@ -13,7 +13,29 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav align-items-center">
         {% if user.is_authenticated %}
-        <li class="nav-item me-4 text-white fw-bold">🪙 Saldo: 1500</li>
+        <li class="nav-item me-4 text-white fw-bold">
+          🪙 Saldo: {{ user.perfil_treinador.saldo_moedas|default:"0.00" }}
+        </li>
+        
+        {% if user.is_staff %}
+        <li class="nav-item dropdown me-3">
+          <a
+            class="nav-link dropdown-toggle text-white fw-bold"
+            href="#"
+            id="navbarAdminDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+          >
+            ⚙️ Admin
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'tipopokemon_list' %}">Tipos Pokémon</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="/admin/">Django Admin</a></li>
+          </ul>
+        </li>
+        {% endif %}
+        
         <li class="nav-item dropdown">
           <a
             class="nav-link dropdown-toggle text-white fw-bold"

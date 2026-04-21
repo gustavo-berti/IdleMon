@@ -1,0 +1,68 @@
+{% extends "website/template.html" %}
+
+{% block title %}Tipos Pokémon - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gerenciar Tipos Pokémon</h2>
+    <a href="{% url 'tipopokemon_create' %}" class="btn btn-poke">
+      + Novo Tipo
+    </a>
+  </div>
+
+  {% if types %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Valor Base de Geração</th>
+              <th>Tier</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for type in types %}
+            <tr>
+              <td>{{ type.id }}</td>
+              <td><strong>{{ type.name }}</strong></td>
+              <td>{{ type.base_generation_value }}</td>
+              <td>
+                {% if type.base_generation_value == 20 %}
+                  <span class="badge bg-danger">S Tier</span>
+                {% elif type.base_generation_value == 15 %}
+                  <span class="badge bg-warning">A Tier</span>
+                {% elif type.base_generation_value == 10 %}
+                  <span class="badge bg-info">B Tier</span>
+                {% else %}
+                  <span class="badge bg-secondary">C Tier</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'tipopokemon_update' type.pk %}" 
+                   class="btn btn-sm btn-outline-primary me-1">
+                  Editar
+                </a>
+                <a href="{% url 'tipopokemon_delete' type.pk %}" 
+                   class="btn btn-sm btn-outline-danger">
+                  Excluir
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    Nenhum tipo cadastrado. <a href="{% url 'tipopokemon_create' %}">Criar o primeiro tipo</a>.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
