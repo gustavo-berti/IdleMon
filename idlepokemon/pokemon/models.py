@@ -67,14 +67,18 @@ class Ovo(models.Model):
 		related_name="eggs",
 	)
 	type = models.ForeignKey(TipoPokemon, on_delete=models.PROTECT, related_name="eggs")
-	species = models.ForeignKey(Especie, on_delete=models.PROTECT, related_name="eggs")
+	species = models.ManyToManyField(Especie, related_name="eggs")
 	name = models.CharField(max_length=80)
 	price = models.DecimalField(max_digits=12, decimal_places=2)
 
-	def hatch(self, box: Box, nickname: str = "Pokemon"):
+	def hatch(self, box: Box, nickname: str = "Pokemon", species: Especie | None = None):
+		selected_species = species or self.species.first()
+		if selected_species is None:
+			raise ValidationError("O ovo precisa ter pelo menos uma especie para chocar.")
+
 		pokemon_instance = PokemonInstancia.objects.create(
 			box=box,
-			species=self.species,
+			species=selected_species,
 			nickname=nickname,
 		)
 		self.delete()

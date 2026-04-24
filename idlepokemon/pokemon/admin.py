@@ -30,5 +30,10 @@ class PokemonInstanciaAdmin(admin.ModelAdmin):
 
 @admin.register(Ovo)
 class OvoAdmin(admin.ModelAdmin):
-	list_display = ("id", "name", "trainer_profile", "type", "species", "price")
+	list_display = ("id", "name", "trainer_profile", "type", "species_list", "price")
 	search_fields = ("name", "trainer_profile__user__username", "species__name", "type__name")
+
+	def species_list(self, obj):
+		return ", ".join(obj.species.values_list("name", flat=True))
+
+	species_list.short_description = "Species"
