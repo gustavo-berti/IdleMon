@@ -1,0 +1,33 @@
+{% extends "website/template.html" %}
+
+{% block title %}Excluir Ovo - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="card border-danger shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-danger mb-3">Excluir Ovo</h2>
+      <p class="mb-4">
+        Tem certeza que deseja excluir o ovo <strong>{{ object.name }}</strong>?
+      </p>
+      <p class="text-muted small">
+        <strong>Detalhes:</strong><br>
+        Tipo: {{ object.type.name }}<br>
+        Espécies:
+        {% for species in object.species.all %}
+          {{ species.name }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          -
+        {% endfor %}<br>
+        Preço: 🪙 {{ object.price }}
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger me-2">Excluir</button>
+        <a href="{% url 'ovo_list' %}" class="btn btn-secondary">Cancelar</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

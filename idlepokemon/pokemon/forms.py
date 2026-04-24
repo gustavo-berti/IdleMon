@@ -21,3 +21,19 @@ class TipoPokemonForm(forms.ModelForm):
         help_texts = {
             'base_generation_value': 'S Tier (20), A Tier (15), B Tier (10), C Tier (5)',
         }
+
+class OvoForm(forms.ModelForm):
+    class Meta:
+        model = Ovo
+        fields = ('name', 'type', 'species', 'price')
+        labels = {
+            'name': 'Nome do Ovo',
+            'type': 'Tipo Pokémon',
+            'species': 'Espécies',
+            'price': 'Preço',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        perfil_treinador = kwargs.pop('perfil_treinador', None)
+        super().__init__(*args, **kwargs)
+        self.perfil_treinador = perfil_treinador
