@@ -12,8 +12,8 @@ from django.views.generic import (
 )
 
 from accounts.models import PerfilTreinador
-from .forms import TipoPokemonForm, OvoForm
-from .models import TipoPokemon, Ovo
+from .forms import BoxForm, TipoPokemonForm, OvoForm
+from .models import Box, TipoPokemon, Ovo
 
 
 # ============================================
@@ -95,3 +95,49 @@ class OvoDeleteView(DeleteView):
     model = Ovo
     template_name = 'pokemon/admin/ovo_confirm_delete.html'
     success_url = reverse_lazy('ovo_list')
+    
+# ============================================
+# CRUD Box (User)
+# ============================================
+
+class BoxListView(LoginRequiredMixin, ListView):
+    model = Box
+    template_name = 'pokemon/box_list.html'
+    context_object_name = 'boxes'
+    
+    def get_queryset(self):
+        perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
+        return Box.objects.filter(trainer_profile=perfil).order_by('name')
+
+
+class BoxCreateView(LoginRequiredMixin, CreateView):
+    model = Box
+    form_class = BoxForm
+    template_name = 'pokemon/box_form.html'
+    success_url = reverse_lazy('box_list')
+    
+    def form_valid(self, form):
+        perfil, created = PerfilTreinador.objects.get_or_create(user=self.request.user)
+        form.instance.trainer_profile = perfil
+        return super().form_valid(form)
+
+
+class BoxUpdateView(LoginRequiredMixin, UpdateView):
+    model = Box
+    form_class = BoxForm
+    template_name = 'pokemon/box_form.html'
+    success_url = reverse_lazy('box_list')
+    
+    def get_queryset(self):
+        perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
+        return Box.objects.filter(trainer_profile=perfil)
+
+
+class BoxDeleteView(LoginRequiredMixin, DeleteView):
+    model = Box
+    template_name = 'pokemon/box_confirm_delete.html'
+    success_url = reverse_lazy('box_list')
+    
+    def get_queryset(self):
+        perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
+        return Box.objects.filter(trainer_profile=perfil)

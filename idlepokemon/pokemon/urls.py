@@ -8,6 +8,10 @@ from .views import (
     OvoCreateView,
     OvoUpdateView,
     OvoDeleteView,
+    BoxListView,
+    BoxCreateView,
+    BoxUpdateView,
+    BoxDeleteView,
 )
 
 urlpatterns = [
@@ -22,4 +26,10 @@ urlpatterns = [
     path('admin/ovos/novo/', OvoCreateView.as_view(), name='ovo_create'),
     path('admin/ovos/<int:pk>/editar/', OvoUpdateView.as_view(), name='ovo_update'),
     path('admin/ovos/<int:pk>/excluir/', OvoDeleteView.as_view(), name='ovo_delete'),
+    
+    # User - Box
+    path('boxes/', BoxListView.as_view(), name='box_list'),
+    path('boxes/nova/', BoxCreateView.as_view(), name='box_create'),
+    path('boxes/<int:pk>/editar/', BoxUpdateView.as_view(), name='box_update'),
+    path('boxes/<int:pk>/excluir/', BoxDeleteView.as_view(), name='box_delete'),
 ]

@@ -1,0 +1,60 @@
+{% extends "website/template.html" %}
+
+{% block title %}Minhas Boxes{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Minhas Boxes</h2>
+    <a href="{% url 'box_create' %}" class="btn btn-poke">
+      + Comprar Nova Box
+    </a>
+  </div>
+
+  {% if boxes %}
+  <div class="row g-4">
+    {% for box in boxes %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ box.name }}</h5>
+          <p class="text-muted mb-3">
+            <small>Capacidade: {{ box.pokemon_instances.count }}/{{ box.slots_max }} Pokémons</small>
+          </p>
+          
+          <div class="progress mb-3" style="height: 20px;">
+            {% widthratio box.pokemon_instances.count box.slots_max 100 as percentage %}
+            <div class="progress-bar" 
+                 role="progressbar" 
+                 style="width: {{ percentage }}%; background-color: var(--poke-red);"
+                 aria-valuenow="{{ percentage }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+              {{ percentage }}%
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <a href="{% url 'box_update' box.pk %}" class="btn btn-sm btn-outline-primary flex-fill">
+              Renomear
+            </a>
+            <a href="{% url 'box_delete' box.pk %}" class="btn btn-sm btn-outline-danger flex-fill">
+              Excluir
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    <h5>Você ainda não possui boxes!</h5>
+    <p class="mb-0">
+      Compre sua primeira box para começar a colecionar Pokémons.
+      <a href="{% url 'box_create' %}" class="alert-link">Comprar agora</a>
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

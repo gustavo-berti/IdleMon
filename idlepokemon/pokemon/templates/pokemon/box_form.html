@@ -1,0 +1,43 @@
+{% extends "website/template.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Editar{% else %}Comprar{% endif %} Box{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="mb-4">
+            {% if object %}
+              Renomear Box
+            {% else %}
+              Comprar Nova Box
+            {% endif %}
+          </h2>
+          
+          {% if not object %}
+          <div class="alert alert-warning mb-4">
+            <h5>💰 Custo: 500 moedas</h5>
+            <p class="mb-0">Uma box pode armazenar até 30 Pokémons.</p>
+          </div>
+          {% endif %}
+          
+          <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            
+            <div class="mt-4">
+              <button type="submit" class="btn btn-poke me-2">
+                {% if object %}Salvar{% else %}Comprar Box{% endif %}
+              </button>
+              <a href="{% url 'box_list' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

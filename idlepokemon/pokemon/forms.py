@@ -37,3 +37,14 @@ class OvoForm(forms.ModelForm):
         perfil_treinador = kwargs.pop('perfil_treinador', None)
         super().__init__(*args, **kwargs)
         self.perfil_treinador = perfil_treinador
+
+class BoxForm(forms.ModelForm):
+    class Meta:
+        model = Box
+        fields = ('name',)
+        labels = {
+            'name': 'Nome da Box',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Ex: Box Principal'}),
+        }
