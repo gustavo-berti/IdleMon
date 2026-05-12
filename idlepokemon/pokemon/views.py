@@ -106,7 +106,7 @@ class BoxListView(LoginRequiredMixin, ListView):
     context_object_name = 'boxes'
     
     def get_queryset(self):
-        perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
+        perfil, created = PerfilTreinador.objects.get_or_create(user=self.request.user)
         return Box.objects.filter(trainer_profile=perfil).order_by('name')
 
 
