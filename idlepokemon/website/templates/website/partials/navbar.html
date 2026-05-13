@@ -12,6 +12,9 @@
 
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav align-items-center">
+        <li class="nav-item me-3">
+          <a class="nav-link text-white" href="{% url 'sobre' %}">📖 Sobre</a>
+        </li>
         {% if user.is_authenticated %}
         <li class="nav-item me-4 text-white fw-bold">
           🪙 Saldo: {{ user.trainer_profile.coin_balance|default:"0.00" }}

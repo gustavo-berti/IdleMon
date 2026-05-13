@@ -1,0 +1,252 @@
+{% extends 'website/template.html' %}
+{% load static %}
+
+{% block title %}IdleMon - Sobre o Projeto{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <!-- Cabeçalho -->
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold" style="color: var(--poke-red)">Sobre o IdleMon</h1>
+    <p class="lead text-muted">Conheça mais sobre nosso projeto acadêmico</p>
+  </div>
+
+  <!-- Descrição do Projeto -->
+  <section class="mb-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="card-title mb-4" style="color: var(--poke-red)">
+          📝 Descrição do Projeto
+        </h2>
+        <p class="text-justify">
+          O <strong>IdleMon</strong> é um sistema de gerenciamento de coleção de Pokémons desenvolvido 
+          como projeto acadêmico utilizando Django. O objetivo principal é simular um jogo idle onde 
+          os usuários podem adquirir ovos de Pokémon, chocá-los em diferentes espécies, organizá-los 
+          em boxes personalizadas e formar equipes que geram moedas automaticamente ao longo do tempo.
+        </p>
+        <p class="text-justify">
+          O sistema implementa conceitos fundamentais de desenvolvimento web com Django, incluindo:
+        </p>
+        <ul>
+          <li><strong>Autenticação e Autorização:</strong> Sistema completo de registro, login e gerenciamento de contas de usuário</li>
+          <li><strong>CRUD Completo:</strong> Operações de Create, Read, Update e Delete para todas as entidades principais</li>
+          <li><strong>Relacionamentos Complexos:</strong> ManyToMany entre Espécies e Tipos, OneToOne entre User e PerfilTreinador, ForeignKeys para Boxes e Instâncias</li>
+          <li><strong>Área Administrativa:</strong> Interface exclusiva para staff gerenciar Tipos de Pokémon e Ovos disponíveis</li>
+          <li><strong>Sistema de Economia:</strong> Gestão de moedas virtuais, compra de boxes e ovos, geração passiva de recursos</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Diagrama de Caso de Uso -->
+  <section class="mb-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="card-title mb-4" style="color: var(--poke-red)">
+          🎭 Diagrama de Caso de Uso
+        </h2>
+        <p class="text-muted mb-4">
+          O diagrama abaixo ilustra o principal ator do sistema (Treinador) e suas funcionalidades disponíveis.
+        </p>
+        <div class="text-center bg-light p-4 rounded border">
+          <img 
+            src="{% static 'images/diagrama_caso_uso.png' %}" 
+            alt="Diagrama de Caso de Uso do IdleMon" 
+            class="img-fluid rounded shadow-sm"
+            style="max-width: 800px; height: auto;"
+          />
+          <p class="text-muted small mt-3 mb-0">
+            <em>Figura 1: Diagrama de Caso de Uso - Funcionalidades do Sistema</em>
+          </p>
+        </div>
+        
+        <!-- Descrição dos casos de uso -->
+        <div class="mt-4">
+          <h5>Funcionalidades do Treinador:</h5>
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <ul>
+                <li><strong>Manter Conta:</strong> Gerenciar informações de perfil e autenticação</li>
+                <li><strong>Comprar Ovo:</strong> Adquirir ovos de Pokémon na loja</li>
+                <li><strong>Chocar Ovo:</strong> Transformar ovos em Pokémons</li>
+                <li><strong>Gerar Moedas:</strong> Obter rendimento através de Pokémons equipados</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul>
+                <li><strong>Gerenciar Boxes:</strong> Criar e organizar boxes de armazenamento</li>
+                <li><strong>Organizar Pokémon:</strong> Mover e gerenciar Pokémons nas boxes</li>
+                <li><strong>Consultar Pokédex:</strong> Visualizar informações dos Pokémons</li>
+                <li><strong>Libertar Pokémon:</strong> Remover Pokémons da coleção</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Diagrama de Classes -->
+  <section class="mb-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="card-title mb-4" style="color: var(--poke-red)">
+          🗂️ Diagrama de Classes
+        </h2>
+        <p class="text-muted mb-4">
+          O diagrama de classes representa a estrutura do banco de dados e os relacionamentos 
+          entre as entidades do sistema.
+        </p>
+        <div class="text-center bg-light p-4 rounded border">
+          <img 
+            src="{% static 'images/diagrama_classes.png' %}" 
+            alt="Diagrama de Classes do IdleMon" 
+            class="img-fluid rounded shadow-sm"
+            style="max-width: 900px; height: auto;"
+          />
+          <p class="text-muted small mt-3 mb-0">
+            <em>Figura 2: Diagrama de Classes - Estrutura de Dados do Sistema</em>
+          </p>
+        </div>
+
+        <!-- Descrição das classes -->
+        <div class="mt-4">
+          <h5>Principais Classes e Relacionamentos:</h5>
+          <div class="row mt-3">
+            <div class="col-md-4 mb-3">
+              <div class="card border-primary h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-primary">👤 User</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • username, email, password<br>
+                    <strong>Relacionamento:</strong><br>
+                    • OneToOne com PerfilTreinador
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="card border-success h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-success">💰 PerfilTreinador</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • saldo_moedas (Decimal)<br>
+                    <strong>Relacionamentos:</strong><br>
+                    • OneToOne com User<br>
+                    • OneToMany com Box e Ovo
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="card border-warning h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-warning">⚡ TipoPokemon</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • nome, valor_base_geracao<br>
+                    <strong>Relacionamentos:</strong><br>
+                    • ManyToMany com Especie<br>
+                    • OneToMany com Ovo
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="card border-info h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-info">🐉 Especie</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • nome, estagio_evolucao<br>
+                    <strong>Método:</strong><br>
+                    • calcular_media_tipo()<br>
+                    <strong>Relacionamentos:</strong><br>
+                    • ManyToMany com TipoPokemon<br>
+                    • OneToMany com PokemonInstancia
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="card border-danger h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-danger">📦 Box</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • nome, slots_max (30)<br>
+                    <strong>Relacionamentos:</strong><br>
+                    • ManyToOne com PerfilTreinador<br>
+                    • OneToMany com PokemonInstancia
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="card border-secondary h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-secondary">⭐ PokemonInstancia</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • apelido, data_nascimento<br>
+                    <strong>Método:</strong><br>
+                    • gerar_lucro()<br>
+                    <strong>Relacionamentos:</strong><br>
+                    • ManyToOne com Box e Especie
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="card border-dark h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-dark">🥚 Ovo</h6>
+                  <p class="card-text small">
+                    <strong>Atributos:</strong><br>
+                    • nome, preco<br>
+                    <strong>Método:</strong><br>
+                    • chocar() → PokemonInstancia<br>
+                    <strong>Relacionamentos:</strong><br>
+                    • ManyToOne com PerfilTreinador<br>
+                    • ManyToOne com TipoPokemon<br>
+                    • ManyToMany com Especie
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-info mt-3">
+            <strong>💡 Observação Importante:</strong><br>
+            A média base de geração de um Pokémon é calculada pela fórmula: 
+            <code>(Tipo1 + Tipo2) / 2</code>, onde cada tipo possui um valor base de geração definido.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Informações de Contato/Créditos -->
+  <section class="text-center">
+    <div class="card shadow-sm" style="background: linear-gradient(135deg, var(--poke-red) 0%, #c41010 100%); color: white;">
+      <div class="card-body py-4">
+        <h5 class="mb-3 fw-bold">🎓 Projeto Acadêmico</h5>
+        <p class="mb-1">
+          Desenvolvido como trabalho da disciplina de Desenvolvimento Web
+        </p>
+        <p class="mb-0 small">
+          © 2026 IdleMon - Todos os direitos reservados
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
