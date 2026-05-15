@@ -13,11 +13,43 @@
         {% csrf_token %}
         {{ form|crispy }}
         
+        {% if object and object.species.exists %}
+        <div class="mt-3 p-3 bg-light rounded">
+          <h6 class="mb-2">Espécies Atuais ({{ object.species.count }}):</h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for species in object.species.all %}
+              <span class="badge" style="background-color: var(--poke-red); font-size: 0.9rem;">
+                {{ species.name }}
+              </span>
+            {% endfor %}
+          </div>
+          <p class="text-muted small mt-2 mb-0">
+            <em>💡 Dica: Se você alterar o tipo, as espécies serão recarregadas automaticamente.</em>
+          </p>
+        </div>
+        {% endif %}
+        
         <div class="mt-4">
-          <button type="submit" class="btn btn-poke me-2">Salvar</button>
+          <button type="submit" class="btn btn-poke me-2">
+            {% if object %}
+              Salvar Alterações
+            {% else %}
+              Criar Ovo e Buscar Espécies
+            {% endif %}
+          </button>
           <a href="{% url 'ovo_list' %}" class="btn btn-secondary">Cancelar</a>
         </div>
       </form>
+      
+      {% if not object %}
+      <div class="alert alert-warning mt-4">
+        <strong>⚠️ Atenção:</strong>
+        <p class="mb-0">
+          A busca de espécies pode levar alguns segundos dependendo da conexão 
+          com a PokéAPI. Aguarde o processamento após clicar em "Criar Ovo".
+        </p>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>

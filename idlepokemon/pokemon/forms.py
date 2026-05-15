@@ -25,12 +25,14 @@ class TipoPokemonForm(forms.ModelForm):
 class OvoForm(forms.ModelForm):
     class Meta:
         model = Ovo
-        fields = ('name', 'type', 'species', 'price')
+        fields = ('name', 'type', 'price')
         labels = {
             'name': 'Nome do Ovo',
             'type': 'Tipo Pokémon',
-            'species': 'Espécies',
             'price': 'Preço',
+        }
+        help_texts = {
+            'type': 'As espécies serão automaticamente adicionadas baseadas no tipo selecionado',
         }
     
     def __init__(self, *args, **kwargs):
