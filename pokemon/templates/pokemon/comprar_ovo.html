@@ -5,48 +5,36 @@
 {% block content %}
 <div class="container my-5">
   <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-7">
       <div class="card shadow-sm">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-4">
             <h2 class="mb-0">{{ ovo.name }}</h2>
-            <span class="badge fs-6" style="background-color: var(--poke-red)">
-              {{ ovo.type.name }}
-            </span>
+            <span class="badge fs-6" style="background-color: var(--poke-red)">{{ ovo.type.name }}</span>
           </div>
-          
-          <div class="mb-4">
-            <h5>📦 Espécies Possíveis</h5>
-            <p class="text-muted small mb-3">
-              Ao comprar este ovo, você receberá uma das seguintes espécies aleatoriamente:
-            </p>
-            <div class="row g-2">
-              {% for species in ovo.species.all %}
-              <div class="col-md-6">
-                <div class="border rounded p-2">
-                  <strong>{{ species.name }}</strong>
-                  <small class="text-muted d-block">Estágio: {{ species.evolution_stage }}</small>
-                </div>
+
+          <h5>📦 Espécies Possíveis</h5>
+          <p class="text-muted small">Ao chocar este ovo, você receberá uma das espécies abaixo aleatoriamente:</p>
+          <div class="row g-2 mb-4">
+            {% for species in ovo.species.all %}
+            <div class="col-md-6">
+              <div class="border rounded p-2 small">
+                <strong>{{ species.name }}</strong>
+                <span class="text-muted d-block">Estágio: {{ species.evolution_stage }}</span>
               </div>
-              {% endfor %}
             </div>
+            {% endfor %}
           </div>
-          
-          <div class="alert alert-info mb-4">
-            <h6 class="mb-2">ℹ️ Informações</h6>
-            <ul class="mb-0 small">
-              <li>Total de espécies: <strong>{{ ovo.species.count }}</strong></li>
-              <li>Tipo: <strong>{{ ovo.type.name }}</strong></li>
-              <li>Valor base de geração: <strong>{{ ovo.type.base_generation_value }}</strong></li>
-            </ul>
+
+          {% if quantidade_no_inventario %}
+          <div class="alert alert-info">
+            Você já possui <strong>{{ quantidade_no_inventario }}x</strong> deste ovo no inventário.
           </div>
-          
+          {% endif %}
+
           <div class="border-top pt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h5 class="mb-0">💰 Preço</h5>
-                <span class="fs-3 fw-bold">🪙 {{ ovo.price }}</span>
-              </div>
+              <span class="fs-3 fw-bold">🪙 {{ ovo.price }}</span>
               <div class="text-end">
                 <small class="text-muted d-block">Seu saldo</small>
                 <span class="fs-5 {% if pode_comprar %}text-success{% else %}text-danger{% endif %}">
@@ -54,26 +42,19 @@
                 </span>
               </div>
             </div>
-            
+
             {% if pode_comprar %}
             <form method="post">
               {% csrf_token %}
-              <button type="submit" class="btn btn-poke w-100 btn-lg">
-                Comprar Ovo
-              </button>
+              <button type="submit" class="btn btn-poke w-100 btn-lg">Comprar Ovo</button>
             </form>
             {% else %}
             <div class="alert alert-danger mb-0">
               <strong>❌ Saldo Insuficiente</strong>
-              <p class="mb-0">
-                Você precisa de mais <strong>🪙 {{ ovo.price|add:saldo|add:"-"|add:saldo }}</strong> moedas.
-              </p>
             </div>
             {% endif %}
-            
-            <a href="{% url 'loja_ovos' %}" class="btn btn-outline-secondary w-100 mt-2">
-              Voltar para Loja
-            </a>
+
+            <a href="{% url 'loja_ovos' %}" class="btn btn-outline-secondary w-100 mt-2">Voltar para Loja</a>
           </div>
         </div>
       </div>

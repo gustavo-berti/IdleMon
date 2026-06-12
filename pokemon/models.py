@@ -72,7 +72,7 @@ class Ovo(models.Model):
 	price = models.DecimalField(max_digits=12, decimal_places=2)
 
 	def hatch(self, box: Box, nickname: str = "Pokemon", species: Especie | None = None):
-		selected_species = species or self.species.first()
+		selected_species = species or self.species.order_by('?').first()
 		if selected_species is None:
 			raise ValidationError("O ovo precisa ter pelo menos uma especie para chocar.")
 
@@ -81,8 +81,24 @@ class Ovo(models.Model):
 			species=selected_species,
 			nickname=nickname,
 		)
-		self.delete()
 		return pokemon_instance
 
 	def __str__(self):
 		return self.name
+
+
+class OvoInventario(models.Model):
+	"""Tabela intermediária que representa ovos no inventário do jogador."""
+	trainer_profile = models.ForeignKey(
+		"accounts.PerfilTreinador",
+		on_delete=models.CASCADE,
+		related_name="ovo_inventario",
+	)
+	ovo = models.ForeignKey(Ovo, on_delete=models.CASCADE, related_name="inventarios")
+	quantidade = models.PositiveIntegerField(default=1)
+
+	class Meta:
+		unique_together = ("trainer_profile", "ovo")
+
+	def __str__(self):
+		return f"{self.trainer_profile.user.username} - {self.ovo.name} x{self.quantidade}"
