@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -78,14 +79,11 @@ class OvoCreateView(CreateView):
     success_url = reverse_lazy('ovo_list')
     
     def form_valid(self, form):
-        # Define o perfil_treinador como o admin atual (para fins de registro)
         perfil, created = PerfilTreinador.objects.get_or_create(user=self.request.user)
         form.instance.trainer_profile = perfil
         
-        # Salvar o ovo primeiro
         response = super().form_valid(form)
         
-        # Agora popular as espécies automaticamente via PokéAPI
         try:
             especies_adicionadas = populate_species_for_egg(self.object, self.object.type)
             
@@ -97,7 +95,7 @@ class OvoCreateView(CreateView):
             else:
                 messages.warning(
                     self.request,
-                    "Ovo criado, mas nenhuma espécie foi encontrada para o tipo selecionado. Verifique a conexão com a PokéAPI."
+                    "Ovo criado, mas nenhuma espécie foi encontrada para o tipo selecionado."
                 )
         except Exception as e:
             messages.error(
@@ -117,7 +115,7 @@ class OvoUpdateView(UpdateView):
     
     def form_valid(self, form):
         response = super().form_valid(form)
-    
+        
         if 'type' in form.changed_data:
             try:
                 self.object.species.clear()
@@ -195,3 +193,86 @@ class BoxDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
         return Box.objects.filter(trainer_profile=perfil)
+
+
+# ============================================
+# Loja de Ovos (User)
+# ============================================
+
+class LojaOvosView(LoginRequiredMixin, ListView):
+    model = Ovo
+    template_name = 'pokemon/loja_ovos.html'
+    context_object_name = 'ovos_disponiveis'
+    
+    def get_queryset(self):
+        return Ovo.objects.filter(
+            trainer_profile__user__is_staff=True
+        ).select_related('type', 'trainer_profile').prefetch_related('species').order_by('type__name', 'price')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        perfil, created = PerfilTreinador.objects.get_or_create(user=self.request.user)
+        context['saldo'] = perfil.coin_balance
+        return context
+
+
+class ComprarOvoView(LoginRequiredMixin, DetailView):
+    model = Ovo
+    template_name = 'pokemon/comprar_ovo.html'
+    context_object_name = 'ovo'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        perfil, created = PerfilTreinador.objects.get_or_create(user=self.request.user)
+        context['saldo'] = perfil.coin_balance
+        context['pode_comprar'] = perfil.coin_balance >= self.object.price
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        ovo_template = self.get_object()
+        perfil = get_object_or_404(PerfilTreinador, user=request.user)
+        
+        if perfil.coin_balance < ovo_template.price:
+            messages.error(request, "Saldo insuficiente para comprar este ovo!")
+            return redirect('comprar_ovo', pk=ovo_template.pk)
+        
+        try:
+            with transaction.atomic():
+                perfil.manage_account(-ovo_template.price)
+                
+                novo_ovo = Ovo.objects.create(
+                    trainer_profile=perfil,
+                    type=ovo_template.type,
+                    name=ovo_template.name,
+                    price=ovo_template.price
+                )
+                
+                novo_ovo.species.set(ovo_template.species.all())
+                
+                messages.success(
+                    request,
+                    f"Ovo '{novo_ovo.name}' comprado com sucesso! Saldo restante: {perfil.coin_balance} moedas."
+                )
+                return redirect('meus_ovos')
+                
+        except Exception as e:
+            messages.error(request, f"Erro ao comprar ovo: {str(e)}")
+            return redirect('comprar_ovo', pk=ovo_template.pk)
+
+
+class MeusOvosView(LoginRequiredMixin, ListView):
+    model = Ovo
+    template_name = 'pokemon/meus_ovos.html'
+    context_object_name = 'meus_ovos'
+    
+    def get_queryset(self):
+        perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
+        return Ovo.objects.filter(
+            trainer_profile=perfil
+        ).select_related('type').prefetch_related('species').order_by('-id')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
+        context['saldo'] = perfil.coin_balance
+        return context

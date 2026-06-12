@@ -14,7 +14,6 @@ def fetch_pokemon_by_type(tipo_nome: str) -> List[Dict]:
         Lista de dicionários com informações dos Pokémon
     """
     try:
-        # Buscar todos os Pokémon do tipo
         url = f"https://pokeapi.co/api/v2/type/{tipo_nome.lower()}"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -128,7 +127,6 @@ def get_final_evolution_stats(pokemon_name: str) -> Tuple[int, int]:
     Returns:
         Tupla (base_stat_total, evolution_stage)
     """
-    # Buscar detalhes da espécie
     pokemon_details = get_pokemon_details(pokemon_name)
     if not pokemon_details:
         return 0, 1
@@ -145,24 +143,20 @@ def get_final_evolution_stats(pokemon_name: str) -> Tuple[int, int]:
     if not evolution_chain_url:
         return 0, 1
     
-    # Buscar cadeia evolutiva
     evolution_chain = get_evolution_chain(evolution_chain_url)
     evolution_list = parse_evolution_chain(evolution_chain)
     
     if not evolution_list:
         return 0, 1
     
-    # Encontrar evolução final
     final_evolution = max(evolution_list, key=lambda x: x['stage'])
     final_evolution_name = final_evolution['name']
     final_stage = final_evolution['stage']
     
-    # Buscar stats da evolução final
     final_pokemon_details = get_pokemon_details(final_evolution_name)
     if not final_pokemon_details:
         return 0, final_stage
     
-    # Calcular total de base stats
     stats = final_pokemon_details.get('stats', [])
     base_stat_total = sum(stat['base_stat'] for stat in stats)
     
@@ -184,7 +178,6 @@ def filter_initial_stage_pokemon(pokemon_list: List[Dict]) -> List[Dict]:
     for entry in pokemon_list:
         pokemon_name = entry['pokemon']['name']
         
-        # Buscar detalhes da espécie
         pokemon_details = get_pokemon_details(pokemon_name)
         if not pokemon_details:
             continue
@@ -201,18 +194,15 @@ def filter_initial_stage_pokemon(pokemon_list: List[Dict]) -> List[Dict]:
         if not evolution_chain_url:
             continue
         
-        # Buscar cadeia evolutiva
         evolution_chain = get_evolution_chain(evolution_chain_url)
         evolution_list = parse_evolution_chain(evolution_chain)
         
         if not evolution_list:
             continue
-        
-        # Verificar se é o primeiro da cadeia evolutiva
+    
         first_pokemon = min(evolution_list, key=lambda x: x['stage'])
         
         if first_pokemon['name'] == pokemon_name:
-            # Buscar stats da evolução final para determinar raridade
             base_stat_total, final_stage = get_final_evolution_stats(pokemon_name)
             
             filtered_pokemon.append({
@@ -233,8 +223,7 @@ def populate_species_for_egg(ovo, tipo_pokemon: TipoPokemon):
         ovo: Instância do modelo Ovo
         tipo_pokemon: Instância do modelo TipoPokemon
     """
-    # Mapear nome do tipo para nome em inglês da PokéAPI
-    # Você pode expandir esse mapeamento conforme necessário
+    
     type_mapping = {
         'Fogo': 'fire',
         'Água': 'water',
@@ -257,18 +246,11 @@ def populate_species_for_egg(ovo, tipo_pokemon: TipoPokemon):
     }
     
     tipo_ingles = type_mapping.get(tipo_pokemon.name, tipo_pokemon.name.lower())
-    
-    # Buscar Pokémon do tipo
-    pokemon_list = fetch_pokemon_by_type(tipo_ingles)
-    
-    # Filtrar apenas estágio inicial
-    filtered_pokemon = filter_initial_stage_pokemon(pokemon_list)
-    
-    # Criar ou buscar espécies no banco de dados
+    pokemon_list = fetch_pokemon_by_type(tipo_ingles)    
+    filtered_pokemon = filter_initial_stage_pokemon(pokemon_list)    
     especies_adicionadas = []
     
-    for pokemon_data in filtered_pokemon[:10]:  # Limitar a 10 espécies por ovo
-        # Criar ou buscar a espécie
+    for pokemon_data in filtered_pokemon[:10]:
         especie, created = Especie.objects.get_or_create(
             name=pokemon_data['name'].capitalize(),
             defaults={
@@ -276,13 +258,11 @@ def populate_species_for_egg(ovo, tipo_pokemon: TipoPokemon):
             }
         )
         
-        # Adicionar o tipo à espécie se ainda não tiver
         if not especie.types.filter(id=tipo_pokemon.id).exists():
             especie.types.add(tipo_pokemon)
         
         especies_adicionadas.append(especie)
     
-    # Adicionar todas as espécies ao ovo
     ovo.species.set(especies_adicionadas)
     
     return especies_adicionadas

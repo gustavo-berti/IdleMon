@@ -1,0 +1,64 @@
+{% extends "website/template.html" %}
+
+{% block title %}Loja de Ovos{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🥚 Loja de Ovos</h2>
+    <div class="d-flex gap-3 align-items-center">
+      <span class="badge bg-success fs-6">🪙 Saldo: {{ saldo }}</span>
+      <a href="{% url 'meus_ovos' %}" class="btn btn-outline-primary">
+        Meus Ovos
+      </a>
+    </div>
+  </div>
+
+  {% if ovos_disponiveis %}
+  <div class="row g-4">
+    {% for ovo in ovos_disponiveis %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title mb-0">{{ ovo.name }}</h5>
+            <span class="badge" style="background-color: var(--poke-red)">
+              {{ ovo.type.name }}
+            </span>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-muted small mb-2">Espécies Possíveis:</h6>
+            <div class="d-flex flex-wrap gap-1">
+              {% for species in ovo.species.all|slice:":5" %}
+                <span class="badge bg-secondary">{{ species.name }}</span>
+              {% endfor %}
+              {% if ovo.species.count > 5 %}
+                <span class="badge bg-light text-dark">+{{ ovo.species.count|add:"-5" }}</span>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+            <div>
+              <strong class="fs-5">🪙 {{ ovo.price }}</strong>
+            </div>
+            <a href="{% url 'comprar_ovo' ovo.pk %}" class="btn btn-poke btn-sm">
+              Ver Detalhes
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    <h5>📭 Loja Vazia</h5>
+    <p class="mb-0">
+      Ainda não há ovos disponíveis para compra. Volte mais tarde!
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

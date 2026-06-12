@@ -12,6 +12,9 @@ from .views import (
     BoxCreateView,
     BoxUpdateView,
     BoxDeleteView,
+    LojaOvosView,
+    ComprarOvoView,
+    MeusOvosView,
 )
 
 urlpatterns = [
@@ -32,4 +35,9 @@ urlpatterns = [
     path('boxes/nova/', BoxCreateView.as_view(), name='box_create'),
     path('boxes/<int:pk>/editar/', BoxUpdateView.as_view(), name='box_update'),
     path('boxes/<int:pk>/excluir/', BoxDeleteView.as_view(), name='box_delete'),
+    
+    # User - Loja de Ovos
+    path('loja/', LojaOvosView.as_view(), name='loja_ovos'),
+    path('loja/<int:pk>/', ComprarOvoView.as_view(), name='comprar_ovo'),
+    path('meus-ovos/', MeusOvosView.as_view(), name='meus_ovos'),
 ]
