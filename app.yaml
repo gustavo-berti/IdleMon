@@ -2,6 +2,9 @@ runtime: python312
 
 entrypoint: gunicorn -b :$PORT --workers 1 --threads 4 idlepokemon.wsgi
 
+env_variables:
+  DJANGO_SETTINGS_MODULE: "idlepokemon.settings"
+
 handlers:
   - url: /static
 
@@ -14,6 +17,3 @@ handlers:
 automatic_scaling:
   min_instances: 0
   max_instances: 2
-
-  env_variables:
-    DJANGO_SETTINGS_MODULE: "idlepokemon.settings"
