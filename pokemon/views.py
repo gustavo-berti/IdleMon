@@ -198,7 +198,8 @@ class LojaOvosView(LoginRequiredMixin, ListView):
             inv.ovo_id: inv.quantidade
             for inv in OvoInventario.objects.filter(trainer_profile=perfil)
         }
-        context['inventario'] = inventario
+        for ovo in context['ovos_disponiveis']:
+            ovo.quantidade_no_inventario = inventario.get(ovo.id, 0)
         return context
 
 

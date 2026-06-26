@@ -146,6 +146,7 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
+CLAUDE.md
 
 # mkdocs documentation
 /site

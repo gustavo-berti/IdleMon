@@ -14,27 +14,27 @@
     </div>
   </div>
 
-  {% if meus_ovos %}
+  {% if inventario %}
   <div class="row g-4">
-    {% for ovo in meus_ovos %}
+    {% for item in inventario %}
     <div class="col-md-6 col-lg-4">
       <div class="card shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <h5 class="card-title mb-0">{{ ovo.name }}</h5>
+            <h5 class="card-title mb-0">{{ item.ovo.name }}</h5>
             <span class="badge" style="background-color: var(--poke-red)">
-              {{ ovo.type.name }}
+              {{ item.ovo.type.name }}
             </span>
           </div>
           
           <div class="mb-3">
-            <h6 class="text-muted small mb-2">Espécies Possíveis ({{ ovo.species.count }}):</h6>
+            <h6 class="text-muted small mb-2">Espécies Possíveis ({{ item.ovo.species.count }}):</h6>
             <div class="d-flex flex-wrap gap-1">
-              {% for species in ovo.species.all|slice:":5" %}
+              {% for species in item.ovo.species.all|slice:":5" %}
                 <span class="badge bg-secondary">{{ species.name }}</span>
               {% endfor %}
-              {% if ovo.species.count > 5 %}
-                <span class="badge bg-light text-dark">+{{ ovo.species.count|add:"-5" }}</span>
+              {% if item.ovo.species.count > 5 %}
+                <span class="badge bg-light text-dark">+{{ item.ovo.species.count|add:"-5" }}</span>
               {% endif %}
             </div>
           </div>
@@ -47,7 +47,7 @@
             <a href="#" class="btn btn-success btn-sm flex-fill">
               Chocar Ovo
             </a>
-            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ ovo.id }}">
+            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}">
               Descartar
             </button>
           </div>
@@ -55,7 +55,7 @@
       </div>
       
       <!-- Modal de Confirmação -->
-      <div class="modal fade" id="deleteModal{{ ovo.id }}" tabindex="-1">
+      <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -63,7 +63,7 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-              <p>Tem certeza que deseja descartar <strong>{{ ovo.name }}</strong>?</p>
+              <p>Tem certeza que deseja descartar <strong>{{ item.ovo.name }}</strong>?</p>
               <p class="text-muted small">Esta ação não pode ser desfeita e você não receberá reembolso.</p>
             </div>
             <div class="modal-footer">
