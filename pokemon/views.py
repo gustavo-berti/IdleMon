@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import (
@@ -14,7 +14,7 @@ from django.views.generic import (
 )
 
 from accounts.models import PerfilTreinador
-from .forms import BoxForm, TipoPokemonForm, OvoForm
+from .forms import BoxForm, ChocarOvoForm, TipoPokemonForm, OvoForm
 from .models import Box, TipoPokemon, Ovo, OvoInventario
 from .utils import populate_species_for_egg
 
@@ -269,3 +269,75 @@ class MeusOvosView(LoginRequiredMixin, ListView):
         perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
         context['saldo'] = perfil.coin_balance
         return context
+
+
+# ============================================
+# Chocar Ovo (User)
+# ============================================
+
+class ChocarOvoView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        inventario = get_object_or_404(OvoInventario, pk=pk, trainer_profile__user=request.user)
+        perfil = get_object_or_404(PerfilTreinador, user=request.user)
+        form = ChocarOvoForm(perfil=perfil)
+        return render(request, 'pokemon/chocar_ovo.html', {
+            'inventario': inventario,
+            'form': form,
+        })
+
+    def post(self, request, pk):
+        inventario = get_object_or_404(OvoInventario, pk=pk, trainer_profile__user=request.user)
+        perfil = get_object_or_404(PerfilTreinador, user=request.user)
+        form = ChocarOvoForm(request.POST, perfil=perfil)
+
+        if not form.is_valid():
+            return render(request, 'pokemon/chocar_ovo.html', {
+                'inventario': inventario,
+                'form': form,
+            })
+
+        box = form.cleaned_data['box']
+        nickname = form.cleaned_data['nickname'] or inventario.ovo.name
+
+        try:
+            with transaction.atomic():
+                pokemon = inventario.ovo.hatch(box=box, nickname=nickname)
+                inventario.quantidade -= 1
+                if inventario.quantidade == 0:
+                    inventario.delete()
+                else:
+                    inventario.save(update_fields=['quantidade'])
+
+            messages.success(
+                request,
+                f"Ovo chocado! Você recebeu um(a) {pokemon.species.name}! Verifique sua box '{box.name}'."
+            )
+            return redirect('meus_ovos')
+        except Exception as e:
+            messages.error(request, f"Erro ao chocar ovo: {e}")
+            return render(request, 'pokemon/chocar_ovo.html', {
+                'inventario': inventario,
+                'form': form,
+            })
+
+
+# ============================================
+# Descartar Ovo do Inventário (User)
+# ============================================
+
+class DescartarOvoView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        inventario = get_object_or_404(OvoInventario, pk=pk, trainer_profile__user=request.user)
+
+        inventario.quantidade -= 1
+        if inventario.quantidade == 0:
+            inventario.delete()
+            messages.success(request, f"Ovo '{inventario.ovo.name}' descartado.")
+        else:
+            inventario.save(update_fields=['quantidade'])
+            messages.success(
+                request,
+                f"1x '{inventario.ovo.name}' descartado. Restam {inventario.quantidade} no inventário."
+            )
+
+        return redirect('meus_ovos')

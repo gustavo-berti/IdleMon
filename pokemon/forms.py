@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Count, F
 from .models import TipoPokemon, Ovo, Box, Especie
 
 
@@ -39,6 +40,32 @@ class OvoForm(forms.ModelForm):
         perfil_treinador = kwargs.pop('perfil_treinador', None)
         super().__init__(*args, **kwargs)
         self.perfil_treinador = perfil_treinador
+
+class ChocarOvoForm(forms.Form):
+    box = forms.ModelChoiceField(
+        queryset=Box.objects.none(),
+        label='Box de Destino',
+        help_text='Apenas boxes com espaço disponível são listadas.',
+        empty_label='--- Selecione uma Box ---',
+    )
+    nickname = forms.CharField(
+        max_length=80,
+        label='Apelido',
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Deixe em branco para usar o nome da espécie'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        perfil = kwargs.pop('perfil')
+        super().__init__(*args, **kwargs)
+        self.fields['box'].queryset = (
+            Box.objects
+            .filter(trainer_profile=perfil)
+            .annotate(uso=Count('pokemon_instances'))
+            .filter(uso__lt=F('slots_max'))
+            .order_by('name')
+        )
+
 
 class BoxForm(forms.ModelForm):
     class Meta:

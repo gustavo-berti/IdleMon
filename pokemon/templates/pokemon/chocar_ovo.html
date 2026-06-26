@@ -1,0 +1,49 @@
+{% extends "website/template.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Chocar {{ inventario.ovo.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h2 class="mb-1">Chocar Ovo</h2>
+              <h5 class="text-muted mb-0">{{ inventario.ovo.name }}</h5>
+            </div>
+            <span class="badge fs-6" style="background-color: var(--poke-red)">
+              {{ inventario.ovo.type.name }}
+            </span>
+          </div>
+
+          <div class="alert alert-secondary">
+            <strong>No inventário:</strong> {{ inventario.quantidade }}x &nbsp;|&nbsp;
+            <strong>Espécies possíveis:</strong> {{ inventario.ovo.species.count }}
+          </div>
+
+          <h6 class="text-muted mb-2">Pokémons que podem sair deste ovo:</h6>
+          <div class="d-flex flex-wrap gap-1 mb-4">
+            {% for species in inventario.ovo.species.all %}
+              <span class="badge bg-secondary">{{ species.name }}</span>
+            {% endfor %}
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="mt-4 d-flex gap-2">
+              <button type="submit" class="btn btn-poke flex-fill">Chocar Ovo!</button>
+              <a href="{% url 'meus_ovos' %}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

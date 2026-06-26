@@ -15,6 +15,8 @@ from .views import (
     LojaOvosView,
     ComprarOvoView,
     MeusOvosView,
+    ChocarOvoView,
+    DescartarOvoView,
 )
 
 urlpatterns = [
@@ -40,4 +42,6 @@ urlpatterns = [
     path('loja/', LojaOvosView.as_view(), name='loja_ovos'),
     path('loja/<int:pk>/', ComprarOvoView.as_view(), name='comprar_ovo'),
     path('meus-ovos/', MeusOvosView.as_view(), name='meus_ovos'),
+    path('meus-ovos/<int:pk>/chocar/', ChocarOvoView.as_view(), name='chocar_ovo'),
+    path('meus-ovos/<int:pk>/descartar/', DescartarOvoView.as_view(), name='descartar_ovo'),
 ]
