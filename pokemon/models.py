@@ -52,6 +52,7 @@ class PokemonInstancia(models.Model):
 	species = models.ForeignKey(Especie, on_delete=models.PROTECT, related_name="instances")
 	nickname = models.CharField(max_length=80)
 	birth_date = models.DateTimeField(default=timezone.now)
+	box_position = models.PositiveSmallIntegerField(null=True, blank=True)
 
 	def generate_profit(self):
 		return Decimal(str(self.species.calculate_type_average()))

@@ -1,7 +1,10 @@
+import json
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -15,7 +18,7 @@ from django.views.generic import (
 
 from accounts.models import PerfilTreinador
 from .forms import BoxForm, ChocarOvoForm, TipoPokemonForm, OvoForm
-from .models import Box, TipoPokemon, Ovo, OvoInventario
+from .models import Box, TipoPokemon, Ovo, OvoInventario, PokemonInstancia
 from .utils import populate_species_for_egg
 
 
@@ -301,7 +304,15 @@ class ChocarOvoView(LoginRequiredMixin, View):
 
         try:
             with transaction.atomic():
+                occupied = set(box.pokemon_instances.values_list('box_position', flat=True))
+                first_free = next((i for i in range(box.slots_max) if i not in occupied), None)
+
                 pokemon = inventario.ovo.hatch(box=box, nickname=nickname)
+
+                if first_free is not None:
+                    pokemon.box_position = first_free
+                    pokemon.save(update_fields=['box_position'])
+
                 inventario.quantidade -= 1
                 if inventario.quantidade == 0:
                     inventario.delete()
@@ -341,3 +352,40 @@ class DescartarOvoView(LoginRequiredMixin, View):
             )
 
         return redirect('meus_ovos')
+
+
+# ============================================
+# Atualizar Posição na Box (AJAX)
+# ============================================
+
+class UpdatePokemonPositionView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            pokemon_id = int(data['pokemon_id'])
+            new_position = int(data['position'])
+        except (KeyError, ValueError, json.JSONDecodeError):
+            return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
+        perfil = get_object_or_404(PerfilTreinador, user=request.user)
+        pokemon = get_object_or_404(PokemonInstancia, pk=pokemon_id, box__trainer_profile=perfil)
+
+        if not (0 <= new_position < pokemon.box.slots_max):
+            return JsonResponse({'error': 'Posição fora do intervalo'}, status=400)
+
+        with transaction.atomic():
+            occupant = (
+                PokemonInstancia.objects
+                .select_for_update()
+                .filter(box=pokemon.box, box_position=new_position)
+                .exclude(pk=pokemon.pk)
+                .first()
+            )
+            old_position = pokemon.box_position
+            if occupant:
+                occupant.box_position = old_position
+                occupant.save(update_fields=['box_position'])
+            pokemon.box_position = new_position
+            pokemon.save(update_fields=['box_position'])
+
+        return JsonResponse({'success': True})

@@ -17,6 +17,7 @@ from .views import (
     MeusOvosView,
     ChocarOvoView,
     DescartarOvoView,
+    UpdatePokemonPositionView,
 )
 
 urlpatterns = [
@@ -44,4 +45,5 @@ urlpatterns = [
     path('meus-ovos/', MeusOvosView.as_view(), name='meus_ovos'),
     path('meus-ovos/<int:pk>/chocar/', ChocarOvoView.as_view(), name='chocar_ovo'),
     path('meus-ovos/<int:pk>/descartar/', DescartarOvoView.as_view(), name='descartar_ovo'),
+    path('posicao/', UpdatePokemonPositionView.as_view(), name='update_pokemon_position'),
 ]

@@ -1,27 +1,160 @@
-{% extends 'website/template.html' %} 
+{% extends 'website/template.html' %}
 
-{% block title %}IdleMon - Sua Colecao{%endblock %}
+{% block title %}IdleMon - Sua Coleção{% endblock %}
+
+{% block extra_head %}
+<style>
+  .box-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    padding: 12px;
+    background: #c8e6c9;
+  }
+
+  .box-slot-cell {
+    aspect-ratio: 1 / 1;
+    border: 2px dashed rgba(0, 0, 0, 0.18);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.45);
+    position: relative;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+
+  .box-slot-cell.drag-over {
+    border-color: #2e7d32;
+    background-color: rgba(46, 125, 50, 0.2);
+    border-style: solid;
+  }
+
+  .pokemon-tile {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s, filter 0.1s;
+  }
+
+  .pokemon-tile:hover {
+    transform: scale(1.1);
+    filter: brightness(1.12);
+    z-index: 5;
+    position: relative;
+  }
+
+  .pokemon-tile.dragging {
+    opacity: 0.35;
+  }
+
+  .pokemon-label {
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+
+  .box-footer {
+    background: #a5d6a7;
+    padding: 4px 12px 6px;
+    text-align: right;
+    border-radius: 0 0 7px 7px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row text-center mb-4">
-  <h2>Suas Boxes</h2>
-  <p class="text-muted">Gerencie sua coleção e organize seus Pokémons.</p>
-</div>
 
-<div class="row justify-content-center mb-5">
-  <div class="col-md-10 box-container shadow">
-    <div
-      class="d-flex justify-content-center align-items-center h-100 text-muted"
-    >
-      <h4>[Conteúdo da Box Atual]</h4>
-    </div>
+<!-- Cabeçalho -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-0">Suas Boxes</h2>
+    <p class="text-muted small mb-0">Arraste os Pokémons para reposicioná-los na box.</p>
   </div>
+  <span class="badge bg-success fs-6">🪙 {{ saldo }}</span>
 </div>
 
-<div class="row mt-auto text-center">
+<!-- Boxes -->
+{% if box_data %}
+
+<ul class="nav nav-tabs" id="boxTabs" role="tablist">
+  {% for item in box_data %}
+  <li class="nav-item" role="presentation">
+    <button class="nav-link {% if forloop.first %}active{% endif %}"
+            id="tab-{{ item.box.id }}"
+            data-bs-toggle="tab"
+            data-bs-target="#box-{{ item.box.id }}"
+            type="button" role="tab">
+      {{ item.box.name }}
+      <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">
+        {{ item.box.pokemon_instances.count }}/{{ item.box.slots_max }}
+      </span>
+    </button>
+  </li>
+  {% endfor %}
+  <li class="nav-item ms-auto d-flex align-items-center">
+    <a href="{% url 'box_create' %}" class="nav-link text-success fw-bold">+ Nova Box</a>
+  </li>
+</ul>
+
+<div class="tab-content mb-4"
+     id="boxTabContent"
+     style="border: 3px solid var(--poke-blue); border-top: none; border-radius: 0 0 10px 10px; overflow: hidden;">
+  {% for item in box_data %}
+  <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+       id="box-{{ item.box.id }}"
+       role="tabpanel">
+
+    <div class="box-grid">
+      {% for slot in item.slots %}
+      <div class="box-slot-cell"
+           data-position="{{ slot.position }}"
+           data-box-id="{{ item.box.id }}">
+        {% if slot.pokemon %}
+        <div class="pokemon-tile"
+             draggable="true"
+             data-pokemon-id="{{ slot.pokemon.id }}"
+             data-pokemon-name="{{ slot.pokemon.nickname }}"
+             data-pokemon-species="{{ slot.pokemon.species.name }}"
+             style="background-color: {{ slot.color }};">
+          <span class="pokemon-label">{{ slot.pokemon.nickname|slice:":3"|upper }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="box-footer">
+      <small class="text-muted">
+        {{ item.box.pokemon_instances.count }}/{{ item.box.slots_max }} Pokémons
+      </small>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="alert alert-info mb-4">
+  <h5>📦 Nenhuma Box</h5>
+  <p class="mb-0">
+    Você ainda não criou nenhuma box.
+    <a href="{% url 'box_create' %}" class="alert-link">Crie sua primeira box</a> para começar!
+  </p>
+</div>
+{% endif %}
+
+<!-- Equipe Ativa -->
+<div class="row mt-auto">
   <div class="col-12 bg-white p-4 rounded shadow-sm border">
-    <h4 class="mb-3">Equipe Ativa (Gerando Moedas)</h4>
-    <div class="d-flex justify-content-center gap-3">
+    <h4 class="mb-3 text-center">Equipe Ativa (Gerando Moedas)</h4>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
       <div class="team-slot shadow-sm">+</div>
       <div class="team-slot shadow-sm">+</div>
       <div class="team-slot shadow-sm">+</div>
@@ -29,9 +162,99 @@
       <div class="team-slot shadow-sm">+</div>
       <div class="team-slot shadow-sm">+</div>
     </div>
-    <p class="mt-3 text-success fw-bold small">
-      Rendimento atual: 15 moedas / hora
-    </p>
+    <p class="mt-3 text-success fw-bold small text-center">Rendimento atual: 0 moedas / hora</p>
   </div>
 </div>
+
+<!-- Modal de opções do Pokémon -->
+<div class="modal fade" id="pokemonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <div>
+          <h6 class="modal-title mb-0" id="modalPokemonName"></h6>
+          <small class="text-muted" id="modalPokemonSpecies"></small>
+        </div>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-primary btn-sm" disabled>🔍 Detalhes</button>
+          <button class="btn btn-outline-warning btn-sm" disabled>📦 Mover para outra Box</button>
+          <button class="btn btn-outline-danger btn-sm" disabled>💔 Soltar</button>
+        </div>
+        <p class="text-muted small text-center mt-2 mb-0">Em breve</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const POSITION_URL = "{% url 'update_pokemon_position' %}";
+const CSRF_TOKEN = "{{ csrf_token }}";
+
+let draggedPokemonId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pokemonModal = new bootstrap.Modal(document.getElementById('pokemonModal'));
+
+  document.querySelectorAll('.pokemon-tile').forEach(tile => {
+    tile.addEventListener('dragstart', e => {
+      draggedPokemonId = tile.dataset.pokemonId;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => tile.classList.add('dragging'), 0);
+    });
+
+    tile.addEventListener('dragend', () => {
+      tile.classList.remove('dragging');
+      draggedPokemonId = null;
+    });
+
+    tile.addEventListener('click', () => {
+      document.getElementById('modalPokemonName').textContent = tile.dataset.pokemonName;
+      document.getElementById('modalPokemonSpecies').textContent = tile.dataset.pokemonSpecies;
+      pokemonModal.show();
+    });
+  });
+
+  document.querySelectorAll('.box-slot-cell').forEach(slot => {
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      slot.classList.add('drag-over');
+    });
+
+    slot.addEventListener('dragleave', e => {
+      if (!slot.contains(e.relatedTarget)) {
+        slot.classList.remove('drag-over');
+      }
+    });
+
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+      if (!draggedPokemonId) return;
+
+      fetch(POSITION_URL, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': CSRF_TOKEN,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pokemon_id: parseInt(draggedPokemonId),
+          position: parseInt(slot.dataset.position),
+        }),
+      })
+      .then(r => r.json())
+      .then(data => { if (data.success) location.reload(); })
+      .catch(console.error);
+
+      draggedPokemonId = null;
+    });
+  });
+});
+</script>
 {% endblock %}
