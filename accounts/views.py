@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import PasswordChangeView as BasePasswordChangeView
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, UpdateView
-from .forms import AccountUpdateForm, LoginForm, RegisterForm
+from .forms import AccountPasswordChangeForm, AccountUpdateForm, LoginForm, RegisterForm
 
 User = get_user_model()
 
@@ -63,6 +64,17 @@ class AccountUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+class AccountPasswordChangeView(LoginRequiredMixin, BasePasswordChangeView):
+    form_class = AccountPasswordChangeForm
+    template_name = 'accounts/form.html'
+    success_url = reverse_lazy('account_detail')
+    extra_context = {
+        'form_action': 'account_password_change',
+        'form_title': 'Alterar Senha',
+        'submit_label': 'Alterar Senha',
+    }
 
 
 class AccountDeleteView(LoginRequiredMixin, DeleteView):

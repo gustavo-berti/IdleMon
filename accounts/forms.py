@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, UserCreationForm
 
 
 class LoginForm(AuthenticationForm):
@@ -29,3 +29,18 @@ class AccountUpdateForm(forms.ModelForm):
             'username': 'Nome de Usuário',
             'email': 'Email',
         }
+
+
+class AccountPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label='Senha Atual',
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'autofocus': True}),
+    )
+    new_password1 = forms.CharField(
+        label='Nova Senha',
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+    )
+    new_password2 = forms.CharField(
+        label='Confirmar Nova Senha',
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+    )
