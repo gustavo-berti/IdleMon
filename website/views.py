@@ -34,7 +34,7 @@ class HomeView(TemplateView):
             return context
 
         from accounts.models import PerfilTreinador
-        from pokemon.models import Box
+        from pokemon.models import Box, PokemonInstancia
 
         perfil, _ = PerfilTreinador.objects.get_or_create(user=self.request.user)
         boxes = (
@@ -65,6 +65,19 @@ class HomeView(TemplateView):
 
         context['box_data'] = box_data
         context['saldo'] = perfil.coin_balance
+
+        # Equipe ativa (Pokémons gerando renda passiva)
+        context['time_ativo'] = (
+            PokemonInstancia.objects
+            .filter(box__trainer_profile=perfil, is_active_team=True)
+            .select_related('species')
+            .prefetch_related('species__types')
+        )
+
+        # Rendimento total por hora da equipe ativa
+        context['rendimento_total'] = sum(
+            p.generate_profit() for p in context['time_ativo']
+        )
         return context
 
 

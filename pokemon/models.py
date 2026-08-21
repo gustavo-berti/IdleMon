@@ -53,6 +53,7 @@ class PokemonInstancia(models.Model):
 	nickname = models.CharField(max_length=80)
 	birth_date = models.DateTimeField(default=timezone.now)
 	box_position = models.PositiveSmallIntegerField(null=True, blank=True)
+	is_active_team = models.BooleanField(default=False)
 
 	def generate_profit(self):
 		return Decimal(str(self.species.calculate_type_average()))
