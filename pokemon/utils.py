@@ -48,6 +48,20 @@ def get_pokemon_details(pokemon_name: str) -> Dict:
         return {}
 
 
+def get_sprite_url(pokemon_details: Dict) -> str:
+    """
+    Extrai a URL do sprite frontal a partir dos detalhes de um Pokémon
+
+    Args:
+        pokemon_details: Dicionário retornado por get_pokemon_details
+
+    Returns:
+        URL do sprite, ou string vazia se não houver
+    """
+    sprites = pokemon_details.get('sprites', {})
+    return sprites.get('front_default') or ''
+
+
 def get_species_details(species_url: str) -> Dict:
     """
     Busca detalhes da espécie do Pokémon (para verificar evolução)
@@ -209,7 +223,8 @@ def filter_initial_stage_pokemon(pokemon_list: List[Dict]) -> List[Dict]:
                 'name': pokemon_name,
                 'evolution_stage': 1,  # Sempre 1 pois é estágio inicial
                 'final_evolution_stats': base_stat_total,
-                'max_evolution_stage': final_stage
+                'max_evolution_stage': final_stage,
+                'sprite_url': get_sprite_url(pokemon_details)
             })
     
     return filtered_pokemon
@@ -254,10 +269,16 @@ def populate_species_for_egg(ovo, tipo_pokemon: TipoPokemon):
         especie, created = Especie.objects.get_or_create(
             name=pokemon_data['name'].capitalize(),
             defaults={
-                'evolution_stage': pokemon_data['evolution_stage']
+                'evolution_stage': pokemon_data['evolution_stage'],
+                'sprite_url': pokemon_data['sprite_url']
             }
         )
-        
+
+        # Espécies já cadastradas antes do sprite existir ficam sem imagem
+        if not created and not especie.sprite_url and pokemon_data['sprite_url']:
+            especie.sprite_url = pokemon_data['sprite_url']
+            especie.save(update_fields=['sprite_url'])
+
         if not especie.types.filter(id=tipo_pokemon.id).exists():
             especie.types.add(tipo_pokemon)
         

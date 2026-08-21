@@ -16,6 +16,7 @@ class TipoPokemon(models.Model):
 class Especie(models.Model):
 	name = models.CharField(max_length=80, unique=True)
 	evolution_stage = models.PositiveSmallIntegerField(default=1)
+	sprite_url = models.URLField(max_length=300, blank=True, default="")
 	types = models.ManyToManyField(TipoPokemon, related_name="species")
 
 	def clean(self):
