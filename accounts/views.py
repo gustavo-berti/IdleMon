@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView as BasePasswordChangeView
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, UpdateView
+from pokemon.models import PokemonInstancia
 from .forms import AccountPasswordChangeForm, AccountUpdateForm, LoginForm, RegisterForm
 
 User = get_user_model()
@@ -49,6 +50,18 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Últimos 6 Pokémons chocados pelo jogador
+        context['ultimos_pokemon'] = (
+            PokemonInstancia.objects
+            .filter(box__trainer_profile__user=self.request.user)
+            .select_related('species', 'box')
+            .prefetch_related('species__types')
+            .order_by('-birth_date')[:6]
+        )
+        return context
 
 
 class AccountUpdateView(LoginRequiredMixin, UpdateView):

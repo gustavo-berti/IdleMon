@@ -2,6 +2,63 @@
 
 {% block title %}Minha Conta{% endblock %}
 
+{% block extra_head %}
+<style>
+  .pokeball {
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 3px solid #1a1a1a;
+    background: linear-gradient(
+      to bottom,
+      var(--poke-red) 0 46%,
+      #1a1a1a 46% 54%,
+      #fff 54% 100%
+    );
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+
+  .pokebola-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.15s;
+  }
+
+  .pokebola-wrapper:hover {
+    transform: scale(1.08);
+  }
+
+  .pokebola-sprite {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    /* Sobrepõe a pokébola, como se o Pokémon estivesse saindo dela.
+       O PNG da PokéAPI tem margem transparente, daí o recuo maior. */
+    margin-bottom: -26px;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+  }
+
+  .pokeball::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #1a1a1a;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container my-5">
   <div class="card shadow-sm">
@@ -13,6 +70,51 @@
       <a class="btn btn-poke me-2" href="{% url 'account_update' %}">Editar Conta</a>
       <a class="btn btn-outline-secondary me-2" href="{% url 'account_password_change' %}">Alterar Senha</a>
       <a class="btn btn-outline-danger" href="{% url 'account_delete' %}">Excluir Conta</a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mt-4">
+    <div class="card-body">
+      <h4 class="card-title mb-4">Últimos Pokémons Chocados</h4>
+
+      {% if ultimos_pokemon %}
+      <div class="d-flex justify-content-center gap-4 flex-wrap">
+        {% for pokemon in ultimos_pokemon %}
+        <div class="text-center" style="width: 110px;">
+          <div class="pokebola-wrapper"
+               title="{{ pokemon.species.name }} — Box {{ pokemon.box.name }}">
+            {% if pokemon.species.sprite_url %}
+            <img src="{{ pokemon.species.sprite_url }}"
+                 alt="{{ pokemon.species.name }}"
+                 class="pokebola-sprite"
+                 loading="lazy">
+            {% endif %}
+            <div class="pokeball"></div>
+          </div>
+          <p class="fw-bold small mt-2 mb-0 text-truncate">{{ pokemon.nickname }}</p>
+          <p class="text-muted mb-1" style="font-size: 0.72rem;">
+            {{ pokemon.species.name }}
+          </p>
+          <div class="d-flex justify-content-center flex-wrap gap-1">
+            {% for type in pokemon.species.types.all %}
+              <span class="badge bg-secondary" style="font-size: 0.6rem;">{{ type.name }}</span>
+            {% endfor %}
+          </div>
+          <p class="text-muted mb-0" style="font-size: 0.68rem;">
+            {{ pokemon.birth_date|date:'d/m/Y' }}
+          </p>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="alert alert-info mb-0">
+        <h5>🥚 Nenhum Pokémon</h5>
+        <p class="mb-0">
+          Você ainda não chocou nenhum ovo.
+          <a href="{% url 'loja_ovos' %}" class="alert-link">Compre seu primeiro ovo</a> na loja!
+        </p>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>
