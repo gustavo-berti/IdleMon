@@ -125,6 +125,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Authentication
+# https://docs.djangoproject.com/en/5.2/ref/settings/#login-url
+
+LOGIN_URL = 'login'
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
