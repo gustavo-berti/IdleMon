@@ -19,11 +19,11 @@
         <div class="card-body">
           <h5 class="card-title">{{ box.name }}</h5>
           <p class="text-muted mb-3">
-            <small>Capacidade: {{ box.pokemon_instances.count }}/{{ box.slots_max }} Pokémons</small>
+            <small>Capacidade: {{ box.pokemon_count }}/{{ box.slots_max }} Pokémons</small>
           </p>
           
           <div class="progress mb-3" style="height: 20px;">
-            {% widthratio box.pokemon_instances.count box.slots_max 100 as percentage %}
+            {% widthratio box.pokemon_count box.slots_max 100 as percentage %}
             <div class="progress-bar" 
                  role="progressbar" 
                  style="width: {{ percentage }}%; background-color: var(--poke-red);"

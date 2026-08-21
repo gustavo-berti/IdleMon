@@ -4,6 +4,7 @@ from braces.views import GroupRequiredMixin
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -66,8 +67,15 @@ class OvoListView(GroupRequiredMixin, ListView):
     model = Ovo
     template_name = 'pokemon/admin/ovo_list.html'
     context_object_name = 'eggs'
-    ordering = ['type__name', 'name']
     paginate_by = 10
+
+    def get_queryset(self):
+        return (
+            Ovo.objects
+            .select_related('type', 'trainer_profile__user')
+            .prefetch_related('species')
+            .order_by('type__name', 'name')
+        )
 
 
 class OvoCreateView(GroupRequiredMixin, CreateView):
@@ -134,7 +142,12 @@ class BoxListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         perfil, _ = PerfilTreinador.objects.get_or_create(user=self.request.user)
-        return Box.objects.filter(trainer_profile=perfil).order_by('name')
+        return (
+            Box.objects
+            .filter(trainer_profile=perfil)
+            .annotate(pokemon_count=Count('pokemon_instances'))
+            .order_by('name')
+        )
 
 
 class BoxCreateView(LoginRequiredMixin, CreateView):
