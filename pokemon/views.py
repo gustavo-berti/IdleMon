@@ -1,13 +1,12 @@
 import json
 
+from braces.views import GroupRequiredMixin
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -26,37 +25,32 @@ from .utils import populate_species_for_egg
 # CRUD TipoPokemon (Admin Only)
 # ============================================
 
-class StaffRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_staff
-
-
-@method_decorator(staff_member_required, name='dispatch')
-class TipoPokemonListView(ListView):
+class TipoPokemonListView(GroupRequiredMixin, ListView):
+    group_required = ['administradores']
     model = TipoPokemon
     template_name = 'pokemon/admin/tipopokemon_list.html'
     context_object_name = 'types'
     ordering = ['-base_generation_value', 'name']
 
 
-@method_decorator(staff_member_required, name='dispatch')
-class TipoPokemonCreateView(CreateView):
+class TipoPokemonCreateView(GroupRequiredMixin, CreateView):
+    group_required = ['administradores']
     model = TipoPokemon
     form_class = TipoPokemonForm
     template_name = 'pokemon/admin/tipopokemon_form.html'
     success_url = reverse_lazy('tipopokemon_list')
 
 
-@method_decorator(staff_member_required, name='dispatch')
-class TipoPokemonUpdateView(UpdateView):
+class TipoPokemonUpdateView(GroupRequiredMixin, UpdateView):
+    group_required = ['administradores']
     model = TipoPokemon
     form_class = TipoPokemonForm
     template_name = 'pokemon/admin/tipopokemon_form.html'
     success_url = reverse_lazy('tipopokemon_list')
 
 
-@method_decorator(staff_member_required, name='dispatch')
-class TipoPokemonDeleteView(DeleteView):
+class TipoPokemonDeleteView(GroupRequiredMixin, DeleteView):
+    group_required = ['administradores']
     model = TipoPokemon
     template_name = 'pokemon/admin/tipopokemon_confirm_delete.html'
     success_url = reverse_lazy('tipopokemon_list')
@@ -66,16 +60,16 @@ class TipoPokemonDeleteView(DeleteView):
 # CRUD Ovo (Admin Only)
 # ============================================
 
-@method_decorator(staff_member_required, name='dispatch')
-class OvoListView(ListView):
+class OvoListView(GroupRequiredMixin, ListView):
+    group_required = ['administradores']
     model = Ovo
     template_name = 'pokemon/admin/ovo_list.html'
     context_object_name = 'eggs'
     ordering = ['type__name', 'name']
 
 
-@method_decorator(staff_member_required, name='dispatch')
-class OvoCreateView(CreateView):
+class OvoCreateView(GroupRequiredMixin, CreateView):
+    group_required = ['administradores']
     model = Ovo
     form_class = OvoForm
     template_name = 'pokemon/admin/ovo_form.html'
@@ -96,8 +90,8 @@ class OvoCreateView(CreateView):
         return response
 
 
-@method_decorator(staff_member_required, name='dispatch')
-class OvoUpdateView(UpdateView):
+class OvoUpdateView(GroupRequiredMixin, UpdateView):
+    group_required = ['administradores']
     model = Ovo
     form_class = OvoForm
     template_name = 'pokemon/admin/ovo_form.html'
@@ -120,8 +114,8 @@ class OvoUpdateView(UpdateView):
         return response
 
 
-@method_decorator(staff_member_required, name='dispatch')
-class OvoDeleteView(DeleteView):
+class OvoDeleteView(GroupRequiredMixin, DeleteView):
+    group_required = ['administradores']
     model = Ovo
     template_name = 'pokemon/admin/ovo_confirm_delete.html'
     success_url = reverse_lazy('ovo_list')
