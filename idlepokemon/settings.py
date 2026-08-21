@@ -43,12 +43,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'crispy_bootstrap5',
+    'debug_toolbar',
     'accounts.apps.AccountsConfig',
     'pokemon.apps.PokemonConfig',
     'website.apps.WebsiteConfig',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -146,3 +148,11 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Django Debug Toolbar
+# https://django-debug-toolbar.readthedocs.io/en/latest/installation.html
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
