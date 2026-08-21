@@ -31,6 +31,7 @@ class TipoPokemonListView(GroupRequiredMixin, ListView):
     template_name = 'pokemon/admin/tipopokemon_list.html'
     context_object_name = 'types'
     ordering = ['-base_generation_value', 'name']
+    paginate_by = 10
 
 
 class TipoPokemonCreateView(GroupRequiredMixin, CreateView):
@@ -66,6 +67,7 @@ class OvoListView(GroupRequiredMixin, ListView):
     template_name = 'pokemon/admin/ovo_list.html'
     context_object_name = 'eggs'
     ordering = ['type__name', 'name']
+    paginate_by = 10
 
 
 class OvoCreateView(GroupRequiredMixin, CreateView):
@@ -176,6 +178,7 @@ class LojaOvosView(LoginRequiredMixin, ListView):
     model = Ovo
     template_name = 'pokemon/loja_ovos.html'
     context_object_name = 'ovos_disponiveis'
+    paginate_by = 9
 
     def get_queryset(self):
         return (
@@ -250,6 +253,7 @@ class MeusOvosView(LoginRequiredMixin, ListView):
     model = OvoInventario
     template_name = 'pokemon/meus_ovos.html'
     context_object_name = 'inventario'
+    paginate_by = 9
 
     def get_queryset(self):
         perfil = get_object_or_404(PerfilTreinador, user=self.request.user)
