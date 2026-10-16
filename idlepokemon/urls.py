@@ -23,6 +23,7 @@ urlpatterns = [
     path('', include('website.urls')),
     path('', include('accounts.urls')),
     path('pokemon/', include('pokemon.urls')),
+    path('chatbot/', include('chatbot.urls')),
 ]
 
 if settings.DEBUG:

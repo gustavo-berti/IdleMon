@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'pokemon.apps.PokemonConfig',
     'website.apps.WebsiteConfig',
     'ia.apps.IaConfig',
+    'chatbot.apps.ChatbotConfig',
 ]
 
 MIDDLEWARE = [

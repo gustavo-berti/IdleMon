@@ -1,0 +1,215 @@
+{% extends "website/template.html" %}
+
+{% block title %}IdleMon - Assistente virtual{% endblock %}
+
+{% block extra_head %}
+<style>
+  .chat-mensagens {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+  }
+
+  .chat-msg {
+    max-width: 85%;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.75rem;
+    overflow-wrap: anywhere;
+  }
+
+  .chat-msg > :last-child { margin-bottom: 0; }
+
+  .chat-msg-user {
+    margin-left: auto;
+    background: var(--poke-yellow);
+    color: #333;
+    white-space: pre-wrap;
+  }
+
+  .chat-msg-model {
+    margin-right: auto;
+    background: #f1f3f5;
+    border-left: 4px solid var(--poke-red);
+  }
+
+  .chat-msg-erro {
+    margin-right: auto;
+    background: #f8d7da;
+    border-left: 4px solid #842029;
+    color: #58151c;
+  }
+
+  .chat-digitando { color: #6c757d; font-style: italic; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 820px;">
+  <h2 class="mb-3">Assistente virtual</h2>
+
+  <div class="mb-3">
+    <div class="d-flex justify-content-between small mb-1">
+      <span id="cota-texto">Uso de IA no mês: {{ cota.usado }} de {{ cota.limite }} tokens</span>
+      <span id="cota-percentual">{{ cota.percentual }}%</span>
+    </div>
+    <div class="progress" style="height: 10px;">
+      <div id="cota-barra"
+           class="progress-bar {% if cota.em_alerta %}bg-danger{% else %}bg-success{% endif %}"
+           role="progressbar"
+           style="width: {{ cota.percentual }}%;"
+           aria-valuenow="{{ cota.percentual }}" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+  </div>
+
+  <div id="chat-mensagens" class="chat-mensagens mb-3" aria-live="polite">
+    {% for m in mensagens %}
+    <div class="chat-msg chat-msg-{{ m.papel }}" data-papel="{{ m.papel }}">{{ m.conteudo }}</div>
+    {% endfor %}
+  </div>
+
+  <div id="chat-sugestoes" class="mb-3 {% if mensagens %}d-none{% endif %}">
+    <p class="text-muted small mb-2">Sugestões para começar:</p>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm chat-sugestao">Como ganho moedas?</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm chat-sugestao">Onde vejo meus ovos?</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm chat-sugestao">Posso escolher o Pokémon que sai do ovo?</button>
+    </div>
+  </div>
+
+  <form id="chat-form" class="mb-3">
+    <div class="mb-2">
+      <label for="chat-entrada" class="visually-hidden">Sua pergunta</label>
+      <textarea id="chat-entrada" class="form-control" rows="2" maxlength="2000"
+                placeholder="Digite sua pergunta. Enter envia, Shift+Enter quebra a linha."></textarea>
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <button type="submit" id="chat-enviar" class="btn btn-poke">Enviar</button>
+      <span id="chat-aviso" class="chat-digitando d-none">Digitando...</span>
+    </div>
+  </form>
+
+  <form method="post" action="{% url 'chatbot:limpar' %}"
+        onsubmit="return confirm('Apagar toda a conversa? Esta ação não pode ser desfeita.');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger btn-sm">Limpar conversa</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"
+        integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"
+        integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"
+        crossorigin="anonymous"></script>
+<script>
+(function () {
+  const ENVIAR_URL = "{% url 'chatbot:enviar' %}";
+  const lista = document.getElementById('chat-mensagens');
+  const form = document.getElementById('chat-form');
+  const entrada = document.getElementById('chat-entrada');
+  const botao = document.getElementById('chat-enviar');
+  const aviso = document.getElementById('chat-aviso');
+  const sugestoes = document.getElementById('chat-sugestoes');
+  let aguardando = false;
+
+  function csrfToken() {
+    const par = document.cookie.split('; ').find(c => c.startsWith('csrftoken='));
+    return par ? decodeURIComponent(par.split('=')[1]) : '';
+  }
+
+  // Markdown -> HTML, sempre sanitizado antes de entrar na página.
+  function renderizarMarkdown(texto) {
+    if (!window.marked || !window.DOMPurify) return null;
+    return DOMPurify.sanitize(marked.parse(texto, { breaks: true }));
+  }
+
+  function preencherAssistente(div, texto) {
+    const html = renderizarMarkdown(texto);
+    if (html === null) div.textContent = texto;
+    else div.innerHTML = html;
+  }
+
+  function adicionar(papel, texto) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg chat-msg-' + papel;
+    div.dataset.papel = papel;
+    if (papel === 'model') preencherAssistente(div, texto);
+    else div.textContent = texto; // pergunta e erros entram sempre como texto
+    lista.appendChild(div);
+    rolarAteOFim();
+    return div;
+  }
+
+  function rolarAteOFim() { lista.scrollTop = lista.scrollHeight; }
+
+  function atualizarCota(cota) {
+    document.getElementById('cota-texto').textContent =
+      'Uso de IA no mês: ' + cota.usado.toLocaleString('pt-BR') + ' de ' + cota.limite.toLocaleString('pt-BR') + ' tokens';
+    document.getElementById('cota-percentual').textContent = cota.percentual + '%';
+    const barra = document.getElementById('cota-barra');
+    barra.style.width = cota.percentual + '%';
+    barra.setAttribute('aria-valuenow', cota.percentual);
+    barra.classList.toggle('bg-danger', cota.em_alerta);
+    barra.classList.toggle('bg-success', !cota.em_alerta);
+  }
+
+  function ocupado(sim) {
+    aguardando = sim;
+    botao.disabled = sim;
+    entrada.disabled = sim;
+    aviso.classList.toggle('d-none', !sim);
+    if (!sim) entrada.focus();
+  }
+
+  async function enviar(texto) {
+    texto = texto.trim();
+    if (!texto || aguardando) return;
+    sugestoes.classList.add('d-none');
+    adicionar('user', texto);
+    entrada.value = '';
+    ocupado(true);
+    try {
+      const resp = await fetch(ENVIAR_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+        body: JSON.stringify({ mensagem: texto }),
+      });
+      const dados = await resp.json();
+      if (dados.sucesso) {
+        adicionar('model', dados.resposta);
+        if (dados.cota) atualizarCota(dados.cota);
+      } else {
+        adicionar('erro', dados.erro || 'Não foi possível obter a resposta.');
+      }
+    } catch (e) {
+      adicionar('erro', 'Não foi possível falar com o servidor. Recarregue a página e tente de novo.');
+    } finally {
+      ocupado(false);
+      rolarAteOFim();
+    }
+  }
+
+  // Mensagens antigas: o servidor entrega texto puro; as do assistente viram Markdown sanitizado.
+  lista.querySelectorAll('.chat-msg-model').forEach(div => preencherAssistente(div, div.textContent));
+  rolarAteOFim();
+
+  form.addEventListener('submit', e => { e.preventDefault(); enviar(entrada.value); });
+
+  entrada.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      enviar(entrada.value);
+    }
+  });
+
+  document.querySelectorAll('.chat-sugestao').forEach(b =>
+    b.addEventListener('click', () => enviar(b.textContent)));
+})();
+</script>
+{% endblock %}
