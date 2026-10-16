@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'pokemon.apps.PokemonConfig',
     'website.apps.WebsiteConfig',
+    'ia.apps.IaConfig',
 ]
 
 MIDDLEWARE = [
@@ -165,3 +166,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
+
+
+# IA (app ia)
+# Provedor "gemini" usa a chave GEMINI_API_KEY do .env; "falso" responde sem internet (testes).
+
+IA_PROVEDOR = os.getenv('IA_PROVEDOR', 'gemini')
+IA_MODELO = os.getenv('IA_MODELO', 'gemini-2.5-flash')
+IA_CHAVE_API = os.getenv('GEMINI_API_KEY', '')
+IA_TIMEOUT_SEGUNDOS = 30
+IA_TENTATIVAS = 3
+IA_ESPERA_RETENTATIVA_SEGUNDOS = 1
+IA_MAX_TOKENS_SAIDA = 1024
+IA_TEMPERATURA = 0.3
+IA_COTA_MENSAL_TOKENS = int(os.getenv('IA_COTA_MENSAL_TOKENS', '50000'))
+IA_COTA_ALERTA_PERCENTUAL = 80

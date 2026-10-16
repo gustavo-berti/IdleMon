@@ -11,3 +11,4 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 requests==2.34.2
 gunicorn
+google-genai==1.75.0
