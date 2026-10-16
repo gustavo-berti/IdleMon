@@ -102,6 +102,9 @@ DATABASES = {
         'HOST': tmpPostgres.hostname,
         'PORT': 5432,
         'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
+        # Nome próprio para o banco de testes: o padrão (test_neondb) é compartilhado e fica em uso.
+        # MIGRATE False: as migrações do app pokemon não rodam num banco vazio (0002 referencia species_id).
+        'TEST': {'NAME': os.getenv('TEST_DATABASE_NAME', 'test_idlepokemon_ia'), 'MIGRATE': False},
     }
 }
 
