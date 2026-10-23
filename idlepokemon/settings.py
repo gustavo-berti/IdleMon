@@ -19,6 +19,8 @@ from urllib.parse import urlparse, parse_qsl
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv()
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -27,9 +29,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-bl5xx9-u_pm(c#lp1s0x#asfb1%!y2beoxb)g@!8#3d3cj3+dj'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# No App Engine o app.yaml define DEBUG=False.
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.appspot.com').split(',') if h.strip()]
+CSRF_TRUSTED_ORIGINS = ['https://*.appspot.com']
 
 
 # Application definition
@@ -43,7 +47,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'crispy_bootstrap5',
-    'debug_toolbar',
     'django_filters',
     'accounts.apps.AccountsConfig',
     'pokemon.apps.PokemonConfig',
@@ -53,7 +56,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -62,6 +64,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Django Debug Toolbar só em desenvolvimento (precisa ser o primeiro middleware)
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 ROOT_URLCONF = 'idlepokemon.urls'
 
@@ -94,7 +101,6 @@ WSGI_APPLICATION = 'idlepokemon.wsgi.application'
 #     }
 # }
 
-load_dotenv()
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {

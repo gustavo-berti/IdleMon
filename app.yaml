@@ -4,6 +4,7 @@ entrypoint: gunicorn -b :$PORT --workers 1 --threads 4 idlepokemon.wsgi
 
 env_variables:
   DJANGO_SETTINGS_MODULE: "idlepokemon.settings"
+  DEBUG: "False"
 
 handlers:
   - url: /static
