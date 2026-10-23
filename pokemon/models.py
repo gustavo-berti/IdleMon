@@ -1,8 +1,23 @@
+import random
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+
+# Classes de raridade pelo BST da última evolução: (nome, multiplicador, BST mínimo, chance de drop em %)
+RARIDADES = [
+	("Lendário", 4, 580, 1),
+	("Épico", 3, 520, 10),
+	("Raro", 2, 420, 24),
+	("Comum", 1, 0, 65),
+]
+
+# Preço de cada box depois da primeira, que é gratuita
+BOX_PRICE = Decimal("500.00")
+
+# Quantidade máxima de Pokémons na Equipe Ativa
+MAX_ACTIVE_TEAM = 6
 
 
 class TipoPokemon(models.Model):
@@ -16,6 +31,8 @@ class TipoPokemon(models.Model):
 class Especie(models.Model):
 	name = models.CharField(max_length=80, unique=True)
 	evolution_stage = models.PositiveSmallIntegerField(default=1)
+	max_evolution_stage = models.PositiveSmallIntegerField(default=1)
+	bst_final = models.PositiveIntegerField(default=0)
 	sprite_url = models.URLField(max_length=300, blank=True, default="")
 	types = models.ManyToManyField(TipoPokemon, related_name="species")
 
@@ -26,10 +43,25 @@ class Especie(models.Model):
 			raise ValidationError("Uma especie deve ter entre 1 e 2 tipos.")
 
 	def calculate_type_average(self):
-		values = list(self.types.values_list("base_generation_value", flat=True))
+		# .all() aproveita o prefetch_related('species__types') das views
+		values = [t.base_generation_value for t in self.types.all()]
 		if not values:
 			return 0.0
 		return sum(values) / len(values)
+
+	@property
+	def has_evolution(self):
+		return self.max_evolution_stage > 1
+
+	def _rarity(self):
+		return next(r for r in RARIDADES if self.bst_final >= r[2])
+
+	def calculate_rarity(self):
+		return self._rarity()[1]
+
+	@property
+	def rarity_name(self):
+		return self._rarity()[0]
 
 	def __str__(self):
 		return self.name
@@ -44,6 +76,10 @@ class Box(models.Model):
 	name = models.CharField(max_length=80)
 	slots_max = models.PositiveIntegerField(default=30)
 
+	def first_free_position(self):
+		occupied = set(self.pokemon_instances.values_list("box_position", flat=True))
+		return next((i for i in range(self.slots_max) if i not in occupied), None)
+
 	def __str__(self):
 		return f"{self.name} ({self.trainer_profile.user.username})"
 
@@ -57,7 +93,11 @@ class PokemonInstancia(models.Model):
 	is_active_team = models.BooleanField(default=False)
 
 	def generate_profit(self):
-		return Decimal(str(self.species.calculate_type_average()))
+		"""Moedas por hora: V_base x V_raridade x V_evolucao (x2 para espécies de estágio único)."""
+		species = self.species
+		v_evolucao = species.evolution_stage if species.has_evolution else 2
+		profit = species.calculate_type_average() * species.calculate_rarity() * v_evolucao
+		return Decimal(str(profit)).quantize(Decimal("0.01"))
 
 	def __str__(self):
 		return self.nickname
@@ -74,15 +114,31 @@ class Ovo(models.Model):
 	name = models.CharField(max_length=80)
 	price = models.DecimalField(max_digits=12, decimal_places=2)
 
-	def hatch(self, box: Box, nickname: str = "Pokemon", species: Especie | None = None):
-		selected_species = species or self.species.order_by('?').first()
+	def draw_species(self):
+		"""Sorteia a raridade pelas chances de drop e depois uma espécie dessa raridade.
+
+		Raridades sem espécie no ovo ficam fora do sorteio e as chances restantes são proporcionais.
+		"""
+		by_rarity = {}
+		for especie in self.species.all():
+			by_rarity.setdefault(especie.rarity_name, []).append(especie)
+		if not by_rarity:
+			return None
+
+		available = [r for r in RARIDADES if r[0] in by_rarity]
+		rarity = random.choices(available, weights=[r[3] for r in available])[0]
+		return random.choice(by_rarity[rarity[0]])
+
+	def hatch(self, box: Box, nickname: str = "", species: Especie | None = None):
+		selected_species = species or self.draw_species()
 		if selected_species is None:
 			raise ValidationError("O ovo precisa ter pelo menos uma especie para chocar.")
 
 		pokemon_instance = PokemonInstancia.objects.create(
 			box=box,
 			species=selected_species,
-			nickname=nickname,
+			nickname=nickname or selected_species.name,
+			box_position=box.first_free_position(),
 		)
 		return pokemon_instance
 

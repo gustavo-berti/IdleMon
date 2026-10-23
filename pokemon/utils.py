@@ -270,14 +270,24 @@ def populate_species_for_egg(ovo, tipo_pokemon: TipoPokemon):
             name=pokemon_data['name'].capitalize(),
             defaults={
                 'evolution_stage': pokemon_data['evolution_stage'],
+                'max_evolution_stage': pokemon_data['max_evolution_stage'],
+                'bst_final': pokemon_data['final_evolution_stats'],
                 'sprite_url': pokemon_data['sprite_url']
             }
         )
 
-        # Espécies já cadastradas antes do sprite existir ficam sem imagem
-        if not created and not especie.sprite_url and pokemon_data['sprite_url']:
-            especie.sprite_url = pokemon_data['sprite_url']
-            especie.save(update_fields=['sprite_url'])
+        # Espécies já cadastradas antes do sprite e da raridade existirem ficam sem esses dados
+        if not created:
+            campos = []
+            if not especie.sprite_url and pokemon_data['sprite_url']:
+                especie.sprite_url = pokemon_data['sprite_url']
+                campos.append('sprite_url')
+            if not especie.bst_final and pokemon_data['final_evolution_stats']:
+                especie.bst_final = pokemon_data['final_evolution_stats']
+                especie.max_evolution_stage = pokemon_data['max_evolution_stage']
+                campos += ['bst_final', 'max_evolution_stage']
+            if campos:
+                especie.save(update_fields=campos)
 
         if not especie.types.filter(id=tipo_pokemon.id).exists():
             especie.types.add(tipo_pokemon)
