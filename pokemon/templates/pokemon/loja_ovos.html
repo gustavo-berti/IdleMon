@@ -12,6 +12,8 @@
     </div>
   </div>
 
+  {% include 'website/partials/filtro.html' %}
+
   {% if ovos_disponiveis %}
   <div class="row g-4">
     {% for ovo in ovos_disponiveis %}
@@ -52,41 +54,16 @@
   </div>
   {% else %}
   <div class="alert alert-info">
+    {% if request.GET %}
+    <h5>🔍 Nenhum ovo encontrado</h5>
+    <p class="mb-0">Nenhum ovo corresponde aos filtros. <a href="{{ request.path }}" class="alert-link">Limpar filtros</a></p>
+    {% else %}
     <h5>📭 Loja Vazia</h5>
     <p class="mb-0">Ainda não há ovos disponíveis para compra. Volte mais tarde!</p>
+    {% endif %}
   </div>
   {% endif %}
+
+  {% include 'website/partials/paginacao.html' %}
 </div>
-
-{% if is_paginated %}
-<nav class="mt-4" aria-label="Paginação">
-  <ul class="pagination justify-content-center">
-
-    {% if page_obj.has_previous %}
-    <li class="page-item">
-      <a class="page-link" href="?page=1">« Primeira</a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.previous_page_number }}">← Anterior</a>
-    </li>
-    {% endif %}
-
-    <li class="page-item disabled">
-      <span class="page-link">
-        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-      </span>
-    </li>
-
-    {% if page_obj.has_next %}
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima →</a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última »</a>
-    </li>
-    {% endif %}
-
-  </ul>
-</nav>
-{% endif %}
 {% endblock %}
