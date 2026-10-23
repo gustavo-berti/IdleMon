@@ -14,6 +14,8 @@
     </div>
   </div>
 
+  {% include 'website/partials/filtro.html' %}
+
   {% if inventario %}
   <div class="row g-4">
     {% for item in inventario %}
@@ -21,7 +23,7 @@
       <div class="card shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <h5 class="card-title mb-0">{{ item.ovo.name }}</h5>
+            <h5 class="card-title mb-0">{{ item.ovo.name }} <small class="text-muted">x{{ item.quantidade }}</small></h5>
             <span class="badge" style="background-color: var(--poke-red)">
               {{ item.ovo.type.name }}
             </span>
@@ -47,32 +49,14 @@
             <a href="{% url 'chocar_ovo' item.id %}" class="btn btn-success btn-sm flex-fill">
               Chocar Ovo
             </a>
-            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}">
-              Descartar
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Modal de Confirmação -->
-      <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Descartar Ovo</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <p>Tem certeza que deseja descartar <strong>{{ item.ovo.name }}</strong>?</p>
-              <p class="text-muted small">Esta ação não pode ser desfeita e você não receberá reembolso.</p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-              <form method="post" action="{% url 'descartar_ovo' item.id %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger">Descartar</button>
-              </form>
-            </div>
+            <!-- Confirmação via Bootbox (static/js/site.js) -->
+            <form method="post" action="{% url 'descartar_ovo' item.id %}"
+                  data-confirmar="Tem certeza que deseja descartar 1x {{ item.ovo.name }}? Esta ação não pode ser desfeita e você não receberá reembolso."
+                  data-confirmar-titulo="Descartar Ovo"
+                  data-confirmar-botao="Descartar">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm">Descartar</button>
+            </form>
           </div>
         </div>
       </div>
@@ -81,43 +65,18 @@
   </div>
   {% else %}
   <div class="alert alert-info">
+    {% if request.GET %}
+    <h5>🔍 Nenhum ovo encontrado</h5>
+    <p class="mb-0">Nenhum ovo do inventário corresponde aos filtros. <a href="{{ request.path }}" class="alert-link">Limpar filtros</a></p>
+    {% else %}
     <h5>📭 Nenhum Ovo</h5>
     <p class="mb-0">
       Você ainda não possui ovos. <a href="{% url 'loja_ovos' %}" class="alert-link">Compre seu primeiro ovo</a> na loja!
     </p>
+    {% endif %}
   </div>
   {% endif %}
+
+  {% include 'website/partials/paginacao.html' %}
 </div>
-
-{% if is_paginated %}
-<nav class="mt-4" aria-label="Paginação">
-  <ul class="pagination justify-content-center">
-
-    {% if page_obj.has_previous %}
-    <li class="page-item">
-      <a class="page-link" href="?page=1">« Primeira</a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.previous_page_number }}">← Anterior</a>
-    </li>
-    {% endif %}
-
-    <li class="page-item disabled">
-      <span class="page-link">
-        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-      </span>
-    </li>
-
-    {% if page_obj.has_next %}
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima →</a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última »</a>
-    </li>
-    {% endif %}
-
-  </ul>
-</nav>
-{% endif %}
 {% endblock %}

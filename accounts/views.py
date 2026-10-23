@@ -1,8 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView as BasePasswordChangeView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, UpdateView
+from accounts.models import STARTING_BALANCE
 from pokemon.models import PokemonInstancia
 from .forms import AccountPasswordChangeForm, AccountUpdateForm, LoginForm, RegisterForm
 
@@ -40,6 +43,11 @@ class RegisterView(FormView):
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
+        messages.success(
+            self.request,
+            f"Conta criada! Você ganhou {STARTING_BALANCE} moedas para começar. "
+            "Crie sua primeira box (é gratuita) e visite a Loja de Ovos."
+        )
         return super().form_valid(form)
 
 
@@ -64,11 +72,12 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class AccountUpdateView(LoginRequiredMixin, UpdateView):
+class AccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = User
     form_class = AccountUpdateForm
     template_name = 'accounts/form.html'
     success_url = reverse_lazy('account_detail')
+    success_message = "Conta atualizada com sucesso!"
     extra_context = {
         'form_action': 'account_update',
         'form_title': 'Atualizar Conta',
@@ -79,10 +88,11 @@ class AccountUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
 
-class AccountPasswordChangeView(LoginRequiredMixin, BasePasswordChangeView):
+class AccountPasswordChangeView(LoginRequiredMixin, SuccessMessageMixin, BasePasswordChangeView):
     form_class = AccountPasswordChangeForm
     template_name = 'accounts/form.html'
     success_url = reverse_lazy('account_detail')
+    success_message = "Senha alterada com sucesso!"
     extra_context = {
         'form_action': 'account_password_change',
         'form_title': 'Alterar Senha',
@@ -104,4 +114,6 @@ class AccountDeleteView(LoginRequiredMixin, DeleteView):
 
     def form_valid(self, form):
         logout(self.request)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.info(self.request, "Sua conta foi excluída. Até a próxima, treinador!")
+        return response
