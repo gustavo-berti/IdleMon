@@ -9,6 +9,8 @@
 #!include:.gitignore
 # O .env fica fora do git, mas precisa subir para o App Engine (DATABASE_URL e GEMINI_API_KEY)
 !.env
+# Estáticos do collectstatic: fora do git, mas o app.yaml serve /static a partir deles
+!static_gcloud/
 .gcloudignore
 # If you would like to upload your .git directory, .gitignore file or files
 # from your .gitignore file, remove the corresponding line
