@@ -6,9 +6,11 @@ from .instrucoes import VERSAO_PROMPT, montar_instrucoes
 from .models import MensagemChat
 
 LIMITE_PERGUNTA = 2000
+# Janela de contexto: só as últimas mensagens vão para a IA
+JANELA_HISTORICO = 5
 
 
-def historico_recente(usuario, limite=6):
+def historico_recente(usuario, limite=JANELA_HISTORICO):
     """As últimas mensagens do usuário, da mais antiga para a mais nova."""
     recentes = MensagemChat.objects.filter(usuario=usuario).order_by("-criado_em", "-id")[:limite]
     return tuple(MensagemHistorico(m.papel, m.conteudo) for m in reversed(list(recentes)))

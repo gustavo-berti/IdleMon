@@ -1,6 +1,6 @@
 from pathlib import Path
 
-VERSAO_PROMPT = "chatbot-1"
+VERSAO_PROMPT = "chatbot-2"
 
 CAMINHO_CONTEXTO = Path(__file__).parent / "contexto_projeto.md"
 

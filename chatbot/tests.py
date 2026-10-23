@@ -51,7 +51,7 @@ class ChatbotTests(TestCase):
         ])
         self.assertEqual(RequisicaoIA.objects.get().finalidade, "chatbot_resposta")
 
-    def test_pedido_leva_contexto_e_no_maximo_6_mensagens_em_ordem(self):
+    def test_pedido_leva_contexto_e_no_maximo_5_mensagens_em_ordem(self):
         for i in range(10):
             MensagemChat.objects.create(usuario=self.usuario, papel="user" if i % 2 == 0 else "model", conteudo=f"m{i}")
         MensagemChat.objects.create(usuario=self.outro, papel="user", conteudo="de outro usuário")
@@ -60,7 +60,7 @@ class ChatbotTests(TestCase):
         self.assertIn("## 1. O que é o sistema", pedido.instrucoes)
         self.assertIn("PERFIL DO USUÁRIO", pedido.instrucoes)
         self.assertEqual(pedido.texto, "nova pergunta")
-        self.assertEqual([m.conteudo for m in pedido.historico], ["m4", "m5", "m6", "m7", "m8", "m9"])
+        self.assertEqual([m.conteudo for m in pedido.historico], ["m5", "m6", "m7", "m8", "m9"])
 
     def test_erro_da_ia_nao_grava_e_responde_503_amigavel(self):
         ProvedorFalso.erros = [IaIndisponivel("detalhe técnico secreto")]
@@ -184,5 +184,5 @@ class ChatbotTests(TestCase):
     def test_historico_recente_respeita_o_limite(self):
         for i in range(8):
             MensagemChat.objects.create(usuario=self.usuario, papel="user", conteudo=str(i))
-        self.assertEqual([m.conteudo for m in historico_recente(self.usuario)], ["2", "3", "4", "5", "6", "7"])
+        self.assertEqual([m.conteudo for m in historico_recente(self.usuario)], ["3", "4", "5", "6", "7"])
         self.assertEqual(len(historico_recente(self.usuario, limite=2)), 2)

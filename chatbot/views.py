@@ -1,6 +1,7 @@
 import json
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -65,4 +66,5 @@ class LimparView(LoginRequiredMixin, View):
 
     def post(self, request):
         MensagemChat.objects.filter(usuario=request.user).delete()
+        messages.success(request, "Conversa apagada.")
         return redirect("chatbot:chat")
