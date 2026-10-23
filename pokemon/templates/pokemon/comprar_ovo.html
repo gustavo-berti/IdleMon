@@ -14,13 +14,22 @@
           </div>
 
           <h5>📦 Espécies Possíveis</h5>
-          <p class="text-muted small">Ao chocar este ovo, você receberá uma das espécies abaixo aleatoriamente:</p>
+          <p class="text-muted small">
+            Ao chocar este ovo, a raridade é sorteada (Comum 65%, Raro 24%, Épico 10%, Lendário 1%)
+            e depois uma espécie dessa raridade. Raridades ausentes no ovo ficam fora do sorteio.
+          </p>
           <div class="row g-2 mb-4">
-            {% for species in ovo.species.all %}
+            {% for species in especies %}
             <div class="col-md-6">
-              <div class="border rounded p-2 small">
-                <strong>{{ species.name }}</strong>
-                <span class="text-muted d-block">Estágio: {{ species.evolution_stage }}</span>
+              <div class="border rounded p-2 small d-flex align-items-center gap-2">
+                {% if species.sprite_url %}
+                <img src="{{ species.sprite_url }}" alt="{{ species.name }}" width="48" height="48" loading="lazy" style="image-rendering: pixelated;">
+                {% endif %}
+                <div>
+                  <strong>{{ species.name }}</strong>
+                  {% include 'pokemon/partials/raridade_badge.html' with especie=species %}
+                  <span class="text-muted d-block">BST final: {{ species.bst_final|default:'?' }}</span>
+                </div>
               </div>
             </div>
             {% endfor %}

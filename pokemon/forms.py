@@ -1,6 +1,6 @@
 from django import forms
-from django.db.models import Count, F
-from .models import TipoPokemon, Ovo, Box, Especie
+from django.db.models import Count, F, Q
+from .models import MAX_ACTIVE_TEAM, TipoPokemon, Ovo, Box, PokemonInstancia
 
 
 class TipoPokemonForm(forms.ModelForm):
@@ -35,7 +35,11 @@ class OvoForm(forms.ModelForm):
         help_texts = {
             'type': 'As espécies serão automaticamente adicionadas baseadas no tipo selecionado',
         }
-    
+        widgets = {
+            # Texto (e não number) para a máscara do jQuery Mask funcionar
+            'price': forms.TextInput(attrs={'class': 'mascara-preco', 'placeholder': '0.00', 'inputmode': 'decimal'}),
+        }
+
     def __init__(self, *args, **kwargs):
         perfil_treinador = kwargs.pop('perfil_treinador', None)
         super().__init__(*args, **kwargs)
@@ -77,3 +81,44 @@ class BoxForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Ex: Box Principal'}),
         }
+
+
+class PokemonInstanciaForm(forms.ModelForm):
+    class Meta:
+        model = PokemonInstancia
+        fields = ('nickname', 'box', 'is_active_team')
+        labels = {
+            'nickname': 'Apelido',
+            'box': 'Box',
+            'is_active_team': 'Na Equipe Ativa (gerando moedas)',
+        }
+        help_texts = {
+            'box': 'Mudar de box coloca o Pokémon na primeira vaga livre da box escolhida.',
+            'is_active_team': f'A equipe comporta até {MAX_ACTIVE_TEAM} Pokémons.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        perfil = kwargs.pop('perfil')
+        super().__init__(*args, **kwargs)
+        self.perfil = perfil
+        self.fields['box'].empty_label = None
+        # Boxes do próprio treinador com vaga, mais a box atual do Pokémon
+        self.fields['box'].queryset = (
+            Box.objects
+            .filter(trainer_profile=perfil)
+            .annotate(uso=Count('pokemon_instances'))
+            .filter(Q(uso__lt=F('slots_max')) | Q(pk=self.instance.box_id))
+            .order_by('name')
+        )
+
+    def clean_is_active_team(self):
+        is_active_team = self.cleaned_data['is_active_team']
+        if is_active_team and not self.instance.is_active_team:
+            em_equipe = PokemonInstancia.objects.filter(
+                box__trainer_profile=self.perfil, is_active_team=True
+            ).count()
+            if em_equipe >= MAX_ACTIVE_TEAM:
+                raise forms.ValidationError(
+                    f'Sua Equipe Ativa já tem {MAX_ACTIVE_TEAM} Pokémons. Retire um antes de adicionar outro.'
+                )
+        return is_active_team

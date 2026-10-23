@@ -1,0 +1,71 @@
+{% extends "website/template.html" %}
+
+{% block title %}{{ pokemon.nickname }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-4 mb-4">
+            {% if pokemon.species.sprite_url %}
+            <img src="{{ pokemon.species.sprite_url }}" alt="{{ pokemon.species.name }}"
+                 width="128" height="128" style="image-rendering: pixelated;">
+            {% endif %}
+            <div>
+              <h2 class="mb-1">{{ pokemon.nickname }}</h2>
+              <h5 class="text-muted mb-2">{{ pokemon.species.name }}</h5>
+              <div class="d-flex flex-wrap gap-1">
+                {% include 'pokemon/partials/raridade_badge.html' with especie=pokemon.species %}
+                {% for type in pokemon.species.types.all %}
+                <span class="badge" style="background-color: var(--poke-red)">{{ type.name }}</span>
+                {% endfor %}
+                {% if pokemon.is_active_team %}
+                <span class="badge bg-success">Na Equipe Ativa</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <ul class="list-group list-group-flush mb-4">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Box</span>
+              <a href="{% url 'box_detail' pokemon.box.pk %}">{{ pokemon.box.name }}</a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Estágio evolutivo</span>
+              <span>{{ pokemon.species.evolution_stage }} de {{ pokemon.species.max_evolution_stage }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>BST da última evolução</span>
+              <span>{{ pokemon.species.bst_final|default:'?' }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Rendimento na Equipe Ativa</span>
+              <strong class="text-success">🪙 {{ pokemon.generate_profit }} / hora</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Chocado em</span>
+              <span>{{ pokemon.birth_date|date:'d/m/Y H:i' }}</span>
+            </li>
+          </ul>
+
+          <div class="d-flex flex-wrap gap-2">
+            <form method="post" action="{% url 'pokemon_equipe' pokemon.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <button type="submit" class="btn {% if pokemon.is_active_team %}btn-outline-success{% else %}btn-success{% endif %}">
+                {% if pokemon.is_active_team %}Retirar da Equipe{% else %}⭐ Colocar na Equipe{% endif %}
+              </button>
+            </form>
+            <a href="{% url 'pokemon_update' pokemon.pk %}" class="btn btn-outline-primary">✏️ Editar / Mover de Box</a>
+            <a href="{% url 'pokemon_delete' pokemon.pk %}" class="btn btn-outline-danger">💔 Libertar</a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary ms-auto">Voltar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

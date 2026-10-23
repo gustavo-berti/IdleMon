@@ -1,0 +1,51 @@
+{% extends "website/template.html" %}
+
+{% block title %}{{ box.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0">📦 {{ box.name }}</h2>
+      <p class="text-muted mb-0">Capacidade: {{ pokemons|length }}/{{ box.slots_max }} Pokémons</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'box_update' box.pk %}" class="btn btn-outline-primary">Renomear</a>
+      <a href="{% url 'box_list' %}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+  </div>
+
+  {% if pokemons %}
+  <div class="row g-3">
+    {% for pokemon in pokemons %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="card shadow-sm h-100 text-center">
+        <div class="card-body">
+          {% if pokemon.species.sprite_url %}
+          <img src="{{ pokemon.species.sprite_url }}" alt="{{ pokemon.species.name }}"
+               width="96" height="96" loading="lazy" style="image-rendering: pixelated;">
+          {% endif %}
+          <h6 class="mb-0 text-truncate">{{ pokemon.nickname }}</h6>
+          <p class="text-muted small mb-1">{{ pokemon.species.name }}</p>
+          {% include 'pokemon/partials/raridade_badge.html' with especie=pokemon.species %}
+          {% if pokemon.is_active_team %}
+          <span class="badge bg-success">Equipe</span>
+          {% endif %}
+          <a href="{% url 'pokemon_detail' pokemon.pk %}" class="stretched-link"
+             aria-label="Detalhes de {{ pokemon.nickname }}"></a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    <h5>📭 Box vazia</h5>
+    <p class="mb-0">
+      Choque um ovo para preencher esta box.
+      <a href="{% url 'meus_ovos' %}" class="alert-link">Ir para Meus Ovos</a>
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

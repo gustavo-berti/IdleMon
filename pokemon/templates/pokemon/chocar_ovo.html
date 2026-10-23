@@ -28,7 +28,7 @@
           <h6 class="text-muted mb-2">Pokémons que podem sair deste ovo:</h6>
           <div class="d-flex flex-wrap gap-1 mb-4">
             {% for species in inventario.ovo.species.all %}
-              <span class="badge bg-secondary">{{ species.name }}</span>
+              <span class="badge bg-secondary" title="{{ species.rarity_name }}">{{ species.name }} · {{ species.rarity_name }}</span>
             {% endfor %}
           </div>
 

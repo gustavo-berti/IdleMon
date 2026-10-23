@@ -9,6 +9,7 @@ from .views import (
     OvoUpdateView,
     OvoDeleteView,
     BoxListView,
+    BoxDetailView,
     BoxCreateView,
     BoxUpdateView,
     BoxDeleteView,
@@ -18,6 +19,11 @@ from .views import (
     ChocarOvoView,
     DescartarOvoView,
     UpdatePokemonPositionView,
+    PokemonDetailView,
+    PokemonUpdateView,
+    PokemonDeleteView,
+    PokemonEquipeView,
+    ColetarRendimentoView,
 )
 
 urlpatterns = [
@@ -35,6 +41,7 @@ urlpatterns = [
     
     # User - Box
     path('boxes/', BoxListView.as_view(), name='box_list'),
+    path('boxes/<int:pk>/', BoxDetailView.as_view(), name='box_detail'),
     path('boxes/nova/', BoxCreateView.as_view(), name='box_create'),
     path('boxes/<int:pk>/editar/', BoxUpdateView.as_view(), name='box_update'),
     path('boxes/<int:pk>/excluir/', BoxDeleteView.as_view(), name='box_delete'),
@@ -46,4 +53,11 @@ urlpatterns = [
     path('meus-ovos/<int:pk>/chocar/', ChocarOvoView.as_view(), name='chocar_ovo'),
     path('meus-ovos/<int:pk>/descartar/', DescartarOvoView.as_view(), name='descartar_ovo'),
     path('posicao/', UpdatePokemonPositionView.as_view(), name='update_pokemon_position'),
+
+    # User - Pokémon e Equipe Ativa
+    path('pokemons/<int:pk>/', PokemonDetailView.as_view(), name='pokemon_detail'),
+    path('pokemons/<int:pk>/editar/', PokemonUpdateView.as_view(), name='pokemon_update'),
+    path('pokemons/<int:pk>/libertar/', PokemonDeleteView.as_view(), name='pokemon_delete'),
+    path('pokemons/<int:pk>/equipe/', PokemonEquipeView.as_view(), name='pokemon_equipe'),
+    path('equipe/coletar/', ColetarRendimentoView.as_view(), name='coletar_rendimento'),
 ]

@@ -34,7 +34,7 @@ class HomeView(TemplateView):
             return context
 
         from accounts.models import PerfilTreinador
-        from pokemon.models import Box, PokemonInstancia
+        from pokemon.models import MAX_ACTIVE_TEAM, Box, PokemonInstancia
 
         perfil, _ = PerfilTreinador.objects.get_or_create(user=self.request.user)
         boxes = (
@@ -55,7 +55,9 @@ class HomeView(TemplateView):
             for i in range(box.slots_max):
                 pokemon = slot_map.get(i)
                 if pokemon:
-                    first_type = pokemon.species.types.first()
+                    # .all() usa o prefetch; .first() faria uma consulta por Pokémon
+                    types = pokemon.species.types.all()
+                    first_type = types[0] if types else None
                     color = TYPE_COLORS.get(first_type.name if first_type else '', '#BDBDBD')
                     slots.append({'pokemon': pokemon, 'color': color, 'position': i})
                 else:
@@ -78,6 +80,9 @@ class HomeView(TemplateView):
         context['rendimento_total'] = sum(
             p.generate_profit() for p in context['time_ativo']
         )
+        # Moedas acumuladas desde a última coleta
+        context['rendimento_pendente'] = perfil.pending_income(hourly=context['rendimento_total'])
+        context['vagas_equipe'] = range(MAX_ACTIVE_TEAM - len(context['time_ativo']))
         return context
 
 

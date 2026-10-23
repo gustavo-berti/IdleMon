@@ -1,0 +1,26 @@
+{% extends "website/template.html" %}
+
+{% block title %}Libertar {{ pokemon.nickname }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="card border-danger shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-danger mb-3">Libertar Pokémon</h2>
+      <p class="mb-4">
+        Tem certeza que deseja libertar <strong>{{ pokemon.nickname }}</strong> ({{ pokemon.species.name }})?
+      </p>
+      <div class="alert alert-danger">
+        <strong>⚠️ Atenção!</strong> Esta ação não pode ser desfeita e você não recebe moedas por ela.
+        {% if pokemon.is_active_team %}<br>Ele está na Equipe Ativa: o rendimento acumulado será coletado antes.{% endif %}
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger me-2">Libertar</button>
+        <a href="{% url 'pokemon_detail' pokemon.pk %}" class="btn btn-secondary">Cancelar</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

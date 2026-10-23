@@ -1,0 +1,3 @@
+{% with raridade=especie.rarity_name %}
+<span class="badge {% if raridade == 'Lendário' %}bg-warning text-dark{% elif raridade == 'Épico' %}bg-danger{% elif raridade == 'Raro' %}bg-primary{% else %}bg-secondary{% endif %}">{{ raridade }}</span>
+{% endwith %}

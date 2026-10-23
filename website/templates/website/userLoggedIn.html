@@ -131,6 +131,11 @@
              data-pokemon-id="{{ slot.pokemon.id }}"
              data-pokemon-name="{{ slot.pokemon.nickname }}"
              data-pokemon-species="{{ slot.pokemon.species.name }}"
+             data-na-equipe="{{ slot.pokemon.is_active_team|yesno:'1,0' }}"
+             data-detalhe-url="{% url 'pokemon_detail' slot.pokemon.id %}"
+             data-editar-url="{% url 'pokemon_update' slot.pokemon.id %}"
+             data-equipe-url="{% url 'pokemon_equipe' slot.pokemon.id %}"
+             data-soltar-url="{% url 'pokemon_delete' slot.pokemon.id %}"
              title="{{ slot.pokemon.nickname }} ({{ slot.pokemon.species.name }})"
              style="background-color: {{ slot.color }};">
           {% if slot.pokemon.species.sprite_url %}
@@ -174,18 +179,31 @@
     <h4 class="mb-3 text-center">Equipe Ativa (Gerando Moedas)</h4>
     <div class="d-flex justify-content-center gap-3 flex-wrap">
       {% for pokemon in time_ativo %}
-      <div class="team-slot shadow-sm"
-           title="{{ pokemon.nickname }} ({{ pokemon.species.name }})">
+      <a href="{% url 'pokemon_detail' pokemon.id %}"
+         class="team-slot shadow-sm text-decoration-none text-dark"
+         style="border-style: solid;"
+         title="{{ pokemon.nickname }} ({{ pokemon.species.name }}) · {{ pokemon.generate_profit }} moedas / hora">
+        {% if pokemon.species.sprite_url %}
+        <img src="{{ pokemon.species.sprite_url }}" alt="{{ pokemon.species.name }}"
+             width="72" height="72" style="image-rendering: pixelated;" loading="lazy">
+        {% else %}
         <span class="fw-bold small">{{ pokemon.nickname|slice:":3"|upper }}</span>
-      </div>
+        {% endif %}
+      </a>
       {% endfor %}
-      {% if time_ativo|length < 6 %}
-      <div class="team-slot shadow-sm">+</div>
-      {% endif %}
+      {% for vaga in vagas_equipe %}
+      <div class="team-slot shadow-sm" title="Vaga livre: clique num Pokémon da box e escolha &quot;Colocar na Equipe&quot;">+</div>
+      {% endfor %}
     </div>
-    <p class="mt-3 text-success fw-bold small text-center">
+    <p class="mt-3 mb-2 text-success fw-bold small text-center">
       Rendimento atual: {{ rendimento_total|default:0 }} moedas / hora
     </p>
+    <form method="post" action="{% url 'coletar_rendimento' %}" class="text-center">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-poke btn-sm" {% if not rendimento_pendente %}disabled{% endif %}>
+        🪙 Coletar {{ rendimento_pendente }} moedas
+      </button>
+    </form>
   </div>
 </div>
 
@@ -202,11 +220,19 @@
       </div>
       <div class="modal-body p-3">
         <div class="d-grid gap-2">
-          <button class="btn btn-outline-primary btn-sm" disabled>🔍 Detalhes</button>
-          <button class="btn btn-outline-warning btn-sm" disabled>📦 Mover para outra Box</button>
-          <button class="btn btn-outline-danger btn-sm" disabled>💔 Soltar</button>
+          <a id="modalDetalhe" class="btn btn-outline-primary btn-sm" href="#">🔍 Detalhes</a>
+          <form id="modalEquipeForm" method="post" class="d-grid">
+            {% csrf_token %}
+            <button type="submit" id="modalEquipeBotao" class="btn btn-outline-success btn-sm"></button>
+          </form>
+          <a id="modalEditar" class="btn btn-outline-warning btn-sm" href="#">📦 Mover para outra Box</a>
+          <form id="modalSoltarForm" method="post" class="d-grid"
+                data-confirmar-titulo="Libertar Pokémon"
+                data-confirmar-botao="Libertar">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">💔 Soltar</button>
+          </form>
         </div>
-        <p class="text-muted small text-center mt-2 mb-0">Em breve</p>
       </div>
     </div>
   </div>
@@ -224,6 +250,9 @@ let draggedPokemonId = null;
 document.addEventListener('DOMContentLoaded', () => {
   const pokemonModal = new bootstrap.Modal(document.getElementById('pokemonModal'));
 
+  // Fecha o modal antes da confirmação do Bootbox abrir, para não empilhar dois modais
+  document.getElementById('modalSoltarForm').addEventListener('submit', () => pokemonModal.hide());
+
   document.querySelectorAll('.pokemon-tile').forEach(tile => {
     tile.addEventListener('dragstart', e => {
       draggedPokemonId = tile.dataset.pokemonId;
@@ -237,8 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tile.addEventListener('click', () => {
-      document.getElementById('modalPokemonName').textContent = tile.dataset.pokemonName;
-      document.getElementById('modalPokemonSpecies').textContent = tile.dataset.pokemonSpecies;
+      const dados = tile.dataset;
+      const naEquipe = dados.naEquipe === '1';
+      document.getElementById('modalPokemonName').textContent = dados.pokemonName;
+      document.getElementById('modalPokemonSpecies').textContent = dados.pokemonSpecies;
+      document.getElementById('modalDetalhe').href = dados.detalheUrl;
+      document.getElementById('modalEditar').href = dados.editarUrl;
+      document.getElementById('modalEquipeForm').action = dados.equipeUrl;
+      document.getElementById('modalEquipeBotao').textContent = naEquipe ? '⭐ Retirar da Equipe' : '⭐ Colocar na Equipe';
+      const soltar = document.getElementById('modalSoltarForm');
+      soltar.action = dados.soltarUrl;
+      soltar.dataset.confirmar = 'Libertar ' + dados.pokemonName + ' (' + dados.pokemonSpecies + ')? Esta ação não pode ser desfeita.';
+      delete soltar.dataset.confirmado;
       pokemonModal.show();
     });
   });

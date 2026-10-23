@@ -17,7 +17,7 @@
     <div class="col-md-6 col-lg-4">
       <div class="card shadow-sm h-100">
         <div class="card-body">
-          <h5 class="card-title">{{ box.name }}</h5>
+          <h5 class="card-title"><a href="{% url 'box_detail' box.pk %}" class="text-decoration-none text-dark">{{ box.name }}</a></h5>
           <p class="text-muted mb-3">
             <small>Capacidade: {{ box.pokemon_count }}/{{ box.slots_max }} Pokémons</small>
           </p>
@@ -35,6 +35,9 @@
           </div>
 
           <div class="d-flex gap-2">
+            <a href="{% url 'box_detail' box.pk %}" class="btn btn-sm btn-poke flex-fill">
+              Ver
+            </a>
             <a href="{% url 'box_update' box.pk %}" class="btn btn-sm btn-outline-primary flex-fill">
               Renomear
             </a>
