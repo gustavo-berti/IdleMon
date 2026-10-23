@@ -1,0 +1,12 @@
+<div class="mb-3">
+  <div class="d-flex justify-content-between small mb-1">
+    <span>Uso de IA no mês: {{ cota.usado }} de {{ cota.limite }} tokens</span>
+    <span>{{ cota.percentual }}%</span>
+  </div>
+  <div class="progress" style="height: 10px;">
+    <div class="progress-bar {% if cota.em_alerta %}bg-danger{% else %}bg-success{% endif %}"
+         role="progressbar"
+         style="width: {{ cota.percentual }}%;"
+         aria-valuenow="{{ cota.percentual }}" aria-valuemin="0" aria-valuemax="100"></div>
+  </div>
+</div>

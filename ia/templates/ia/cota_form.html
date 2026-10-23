@@ -1,0 +1,29 @@
+{% extends "website/template.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Limite de IA de {{ usuario.username }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="mb-3">Limite de IA de {{ usuario.username }}</h2>
+
+          {% include 'ia/partials/barra_cota.html' %}
+
+          <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="mt-4">
+              <button type="submit" class="btn btn-poke me-2">Salvar</button>
+              <a href="{% url 'ia:usuarios' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

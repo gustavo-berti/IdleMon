@@ -1,0 +1,62 @@
+{% extends "website/template.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Configuração da IA - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Configuração da IA</h2>
+    <a href="{% url 'ia:requisicoes' %}" class="btn btn-outline-primary">Requisições</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          {% if not salva %}
+          <div class="alert alert-info small">
+            Ainda não há configuração salva: os valores abaixo são os padrões do servidor.
+          </div>
+          {% else %}
+          <p class="text-muted small">
+            Última alteração em {{ object.atualizado_em|date:'d/m/Y H:i' }}
+            {% if object.atualizado_por %}por {{ object.atualizado_por.username }}{% endif %}.
+          </p>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-poke mt-2">Salvar Configuração</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Testar conexão</h5>
+          <p class="small mb-2">
+            Chave da API:
+            {% if chave_configurada %}
+            <span class="badge bg-success">configurada</span>
+            {% else %}
+            <span class="badge bg-danger">ausente</span>
+            {% endif %}
+          </p>
+          <p class="text-muted small">
+            A chave fica só no arquivo <code>.env</code> do servidor (<code>GEMINI_API_KEY</code>), nunca no banco.
+            O teste faz uma chamada curta com a configuração salva e conta na sua cota.
+          </p>
+          <form method="post" action="{% url 'ia:testar_conexao' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-success w-100">🔌 Testar conexão</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

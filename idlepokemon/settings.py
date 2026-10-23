@@ -75,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'website.context_processors.administrador',
             ],
         },
     },
@@ -171,7 +172,8 @@ INTERNAL_IPS = [
 
 
 # IA (app ia)
-# Provedor "gemini" usa a chave GEMINI_API_KEY do .env; "falso" responde sem internet (testes).
+# Valores padrão: a tela "Configuração da IA" salva no banco (ConfiguracaoIA) e passa a valer no lugar deles.
+# A chave fica só no .env (GEMINI_API_KEY), nunca no banco. Provedor "falso" responde sem internet (testes).
 
 IA_PROVEDOR = os.getenv('IA_PROVEDOR', 'gemini')
 IA_MODELO = os.getenv('IA_MODELO', 'gemini-2.5-flash')

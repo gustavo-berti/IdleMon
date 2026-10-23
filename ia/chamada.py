@@ -6,7 +6,7 @@
         montar_pedido=lambda config: PedidoIA(instrucoes=..., texto=...),
     )
 
-Faz, nesta ordem: confere a cota, monta o pedido, chama o provedor com retentativas,
+Faz, nesta ordem: confere se a IA está ativa e a cota, monta o pedido, chama o provedor com retentativas,
 registra a RequisicaoIA e devolve a RespostaIA. Levanta CotaExcedida, IaIndisponivel ou ErroIA.
 """
 
@@ -66,6 +66,10 @@ def chamar_ia(*, finalidade, usuario, origem, versao_prompt, montar_pedido):
     config = carregar_config()
     inicio = time.monotonic()
     dados = (config, usuario, finalidade, origem, versao_prompt)
+
+    if not config.ativa:
+        _registrar(*dados, RequisicaoIA.ERRO, 0, inicio, erro="IA desativada na configuração.")
+        raise ErroIA("A IA está desativada na configuração.")
 
     try:
         verificar_cota(dono_da_cota(usuario))

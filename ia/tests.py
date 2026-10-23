@@ -2,13 +2,16 @@ from datetime import timedelta
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from .chamada import chamar_ia
+from .config import carregar_config
 from .cota import dono_da_cota, situacao_da_cota
 from .excecoes import CotaExcedida, ErroIA, IaIndisponivel
-from .models import RequisicaoIA
+from .models import ConfiguracaoIA, CotaUsuarioIA, RequisicaoIA
 from .provedores.base import MensagemHistorico, PedidoIA
 from .provedores.falso import ProvedorFalso
 
@@ -156,3 +159,138 @@ class CotaTests(TestCase):
     def test_mes_anterior_nao_conta(self):
         self.gasto(self.usuario, 90, criado_em=timezone.now() - timedelta(days=40))
         self.assertEqual(situacao_da_cota(self.usuario).usado, 0)
+
+
+@override_settings(
+    IA_PROVEDOR="falso",
+    IA_TENTATIVAS=1,
+    IA_ESPERA_RETENTATIVA_SEGUNDOS=0,
+    IA_COTA_MENSAL_TOKENS=100,
+)
+class ConfiguracaoNoBancoTests(TestCase):
+    def setUp(self):
+        ProvedorFalso.reiniciar()
+        self.addCleanup(ProvedorFalso.reiniciar)
+        self.usuario = User.objects.create_user("ash", password="x")
+
+    def chamar(self):
+        return chamar_ia(
+            finalidade="t", usuario=self.usuario, origem="t", versao_prompt="",
+            montar_pedido=lambda config: PedidoIA(instrucoes="", texto="oi"),
+        )
+
+    def test_sem_registro_usa_o_settings(self):
+        config = carregar_config()
+        self.assertEqual((config.provedor, config.cota_mensal_tokens, config.ativa), ("falso", 100, True))
+
+    def test_registro_salvo_vale_no_lugar_do_settings(self):
+        salva = ConfiguracaoIA.padrao()
+        salva.cota_mensal_tokens = 500
+        salva.modelo = "outro-modelo"
+        salva.save()
+        config = carregar_config()
+        self.assertEqual((config.cota_mensal_tokens, config.modelo), (500, "outro-modelo"))
+        self.assertEqual(ConfiguracaoIA.objects.count(), 1)
+
+    def test_ia_desativada_nao_chama_o_provedor_e_registra(self):
+        salva = ConfiguracaoIA.padrao()
+        salva.ativa = False
+        salva.save()
+        with self.assertRaises(ErroIA):
+            self.chamar()
+        self.assertEqual(ProvedorFalso.pedidos, [])
+        self.assertEqual(RequisicaoIA.objects.get().erro, "IA desativada na configuração.")
+
+    def test_limite_proprio_do_usuario(self):
+        CotaUsuarioIA.objects.create(usuario=self.usuario, limite_mensal_tokens=10)
+        self.assertEqual(situacao_da_cota(self.usuario).limite, 10)
+
+    def test_limite_zero_bloqueia(self):
+        CotaUsuarioIA.objects.create(usuario=self.usuario, limite_mensal_tokens=0)
+        with self.assertRaises(CotaExcedida):
+            self.chamar()
+        self.assertEqual(ProvedorFalso.pedidos, [])
+
+
+@override_settings(
+    IA_PROVEDOR="falso",
+    IA_TENTATIVAS=1,
+    IA_ESPERA_RETENTATIVA_SEGUNDOS=0,
+    IA_COTA_MENSAL_TOKENS=1000,
+)
+class TelasIATests(TestCase):
+    def setUp(self):
+        ProvedorFalso.reiniciar()
+        self.addCleanup(ProvedorFalso.reiniciar)
+        self.admin = User.objects.create_user("oak", password="x")
+        self.admin.groups.add(Group.objects.create(name="administradores"))
+        self.usuario = User.objects.create_user("ash", password="x")
+        RequisicaoIA.objects.create(
+            usuario=self.usuario, finalidade="chatbot_resposta", origem="site", provedor="falso",
+            modelo="m", status="sucesso", tokens_total=40,
+        )
+        RequisicaoIA.objects.create(
+            usuario=self.admin, finalidade="teste_conexao", origem="tela", provedor="falso",
+            modelo="m", status="erro",
+        )
+
+    def test_telas_de_admin_exigem_o_grupo(self):
+        self.client.force_login(self.usuario)
+        for nome in ["ia:requisicoes", "ia:configuracao", "ia:usuarios"]:
+            self.assertEqual(self.client.get(reverse(nome)).status_code, 302, nome)
+        self.assertEqual(self.client.get(reverse("ia:cota_usuario", args=[self.usuario.pk])).status_code, 302)
+        self.assertEqual(self.client.post(reverse("ia:testar_conexao")).status_code, 302)
+
+    def test_requisicoes_filtra_por_status(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse("ia:requisicoes"), {"status": "erro"})
+        self.assertEqual([q.finalidade for q in r.context["requisicoes"]], ["teste_conexao"])
+
+    def test_salvar_configuracao(self):
+        self.client.force_login(self.admin)
+        dados = {
+            "ativa": "on", "provedor": "falso", "modelo": "modelo-x", "timeout_segundos": 10,
+            "tentativas": 2, "espera_retentativa_segundos": 0, "max_tokens_saida": 256,
+            "temperatura": 0.5, "cota_mensal_tokens": 2000, "cota_alerta_percentual": 90,
+        }
+        r = self.client.post(reverse("ia:configuracao"), dados, follow=True)
+        self.assertContains(r, "Configuração da IA salva")
+        salva = ConfiguracaoIA.objects.get()
+        self.assertEqual((salva.modelo, salva.cota_mensal_tokens, salva.atualizado_por), ("modelo-x", 2000, self.admin))
+
+    def test_testar_conexao(self):
+        self.client.force_login(self.admin)
+        r = self.client.post(reverse("ia:testar_conexao"), follow=True)
+        self.assertContains(r, "Conexão OK")
+        self.assertTrue(RequisicaoIA.objects.filter(finalidade="teste_conexao", status="sucesso").exists())
+
+    def test_testar_conexao_com_falha(self):
+        ProvedorFalso.erros = [ErroIA("chave inválida")]
+        self.client.force_login(self.admin)
+        with self.assertLogs("ia.chamada", level="ERROR"):
+            r = self.client.post(reverse("ia:testar_conexao"), follow=True)
+        self.assertContains(r, "Falha na conexão: chave inválida")
+
+    def test_ia_por_usuario_mostra_o_consumo_do_mes(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse("ia:usuarios"))
+        ash = next(u for u in r.context["usuarios"] if u.username == "ash")
+        self.assertEqual((ash.tokens_mes, ash.requisicoes_mes, ash.limite, ash.percentual), (40, 1, 1000, 4))
+
+    def test_alterar_e_voltar_para_a_cota_padrao(self):
+        self.client.force_login(self.admin)
+        url = reverse("ia:cota_usuario", args=[self.usuario.pk])
+        self.client.post(url, {"limite_mensal_tokens": "50"})
+        self.assertEqual(CotaUsuarioIA.objects.get(usuario=self.usuario).limite_mensal_tokens, 50)
+        r = self.client.post(url, {"limite_mensal_tokens": ""}, follow=True)
+        self.assertContains(r, "voltou a usar a cota padrão")
+        self.assertFalse(CotaUsuarioIA.objects.filter(usuario=self.usuario).exists())
+
+    def test_meu_consumo_mostra_so_as_proprias_requisicoes(self):
+        self.client.force_login(self.usuario)
+        r = self.client.get(reverse("ia:meu_consumo"))
+        self.assertEqual([q.finalidade for q in r.context["requisicoes"]], ["chatbot_resposta"])
+        self.assertContains(r, "Uso de IA no mês: 40 de 1000 tokens")
+
+    def test_meu_consumo_exige_login(self):
+        self.assertEqual(self.client.get(reverse("ia:meu_consumo")).status_code, 302)

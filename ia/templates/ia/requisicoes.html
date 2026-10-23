@@ -1,0 +1,72 @@
+{% extends "website/template.html" %}
+
+{% block title %}Requisições de IA - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Requisições de IA</h2>
+    <div class="d-flex gap-2">
+      <a href="{% url 'ia:configuracao' %}" class="btn btn-outline-primary">Configuração</a>
+      <a href="{% url 'ia:usuarios' %}" class="btn btn-outline-primary">IA por usuário</a>
+    </div>
+  </div>
+
+  <p class="text-muted small">
+    Auditoria de cada chamada à IA. O texto das perguntas e respostas não é guardado aqui.
+  </p>
+
+  {% include 'website/partials/filtro.html' %}
+
+  {% if requisicoes %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Usuário</th>
+              <th>Finalidade</th>
+              <th>Origem</th>
+              <th>Status</th>
+              <th>Modelo</th>
+              <th class="text-end">Tokens</th>
+              <th class="text-end">Duração</th>
+              <th class="text-end">Tentativas</th>
+              <th>Erro</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requisicoes %}
+            <tr>
+              <td class="text-nowrap">{{ req.criado_em|date:'d/m/Y H:i' }}</td>
+              <td>{{ req.usuario.username|default:'-' }}</td>
+              <td>{{ req.finalidade }}</td>
+              <td>{{ req.origem }}</td>
+              <td>{% include 'ia/partials/status_badge.html' %}</td>
+              <td class="small">{{ req.provedor }} · {{ req.modelo }}</td>
+              <td class="text-end" title="{{ req.tokens_entrada }} de entrada + {{ req.tokens_saida }} de saída">{{ req.tokens_total }}</td>
+              <td class="text-end">{{ req.duracao_ms }} ms</td>
+              <td class="text-end">{{ req.tentativas }}</td>
+              <td class="small text-danger">{{ req.erro }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    {% if request.GET %}
+    Nenhuma requisição corresponde aos filtros. <a href="{{ request.path }}">Limpar filtros</a>.
+    {% else %}
+    Nenhuma chamada à IA registrada ainda.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% include 'website/partials/paginacao.html' %}
+</div>
+{% endblock %}

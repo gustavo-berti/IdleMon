@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('pokemon/', include('pokemon.urls')),
     path('chatbot/', include('chatbot.urls')),
+    path('ia/', include('ia.urls')),
 ]
 
 if settings.DEBUG:

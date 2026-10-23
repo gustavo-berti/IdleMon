@@ -1,0 +1,54 @@
+{% extends "website/template.html" %}
+
+{% block title %}Meu consumo de IA{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 900px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Meu consumo de IA</h2>
+    <a href="{% url 'chatbot:chat' %}" class="btn btn-poke">🤖 Abrir Assistente</a>
+  </div>
+
+  {% include 'ia/partials/barra_cota.html' %}
+
+  {% if cota.em_alerta %}
+  <div class="alert alert-warning small">
+    Você já usou {{ cota.percentual }}% do seu limite deste mês. O limite renova no dia 1º.
+  </div>
+  {% endif %}
+
+  <h5 class="mt-4">Requisições deste mês</h5>
+  {% if requisicoes %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Finalidade</th>
+              <th>Status</th>
+              <th class="text-end">Tokens</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requisicoes %}
+            <tr>
+              <td>{{ req.criado_em|date:'d/m/Y H:i' }}</td>
+              <td>{{ req.finalidade }}</td>
+              <td>{% include 'ia/partials/status_badge.html' %}</td>
+              <td class="text-end">{{ req.tokens_total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">Você ainda não usou a IA neste mês.</div>
+  {% endif %}
+
+  {% include 'website/partials/paginacao.html' %}
+</div>
+{% endblock %}

@@ -1,4 +1,7 @@
-"""Cota mensal de tokens. O consumo é a soma dos tokens das requisições bem-sucedidas do mês."""
+"""Cota mensal de tokens. O consumo é a soma dos tokens das requisições bem-sucedidas do mês.
+
+O limite é o próprio do usuário (CotaUsuarioIA, tela "IA por usuário") ou a cota padrão da configuração.
+"""
 
 from dataclasses import dataclass
 
@@ -7,9 +10,18 @@ from django.utils import timezone
 
 from .config import carregar_config
 from .excecoes import CotaExcedida
-from .models import RequisicaoIA
+from .models import CotaUsuarioIA, RequisicaoIA
 
-__all__ = ["CotaExcedida", "SituacaoCota", "dono_da_cota", "situacao_da_cota", "verificar_cota", "mensagem_esgotada"]
+__all__ = [
+    "CotaExcedida",
+    "SituacaoCota",
+    "dono_da_cota",
+    "inicio_do_mes",
+    "limite_do",
+    "situacao_da_cota",
+    "verificar_cota",
+    "mensagem_esgotada",
+]
 
 
 @dataclass(frozen=True)
@@ -46,9 +58,16 @@ def dono_da_cota(usuario):
     return usuario
 
 
-def _inicio_do_mes():
+def inicio_do_mes():
     agora = timezone.localtime()
     return agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+
+def limite_do(dono, config=None):
+    """Limite mensal do dono: o próprio, se houver, senão a cota padrão."""
+    config = config or carregar_config()
+    proprio = CotaUsuarioIA.objects.filter(usuario=dono).values_list("limite_mensal_tokens", flat=True).first()
+    return config.cota_mensal_tokens if proprio is None else proprio
 
 
 def situacao_da_cota(dono):
@@ -57,13 +76,13 @@ def situacao_da_cota(dono):
         RequisicaoIA.objects.filter(
             usuario=dono,
             status=RequisicaoIA.SUCESSO,
-            criado_em__gte=_inicio_do_mes(),
+            criado_em__gte=inicio_do_mes(),
         ).aggregate(total=Sum("tokens_total"))["total"]
         or 0
     )
     return SituacaoCota(
         usado=usado,
-        limite=config.cota_mensal_tokens,
+        limite=limite_do(dono, config),
         alerta_percentual=config.cota_alerta_percentual,
     )
 

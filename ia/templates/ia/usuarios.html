@@ -1,0 +1,69 @@
+{% extends "website/template.html" %}
+
+{% block title %}IA por usuário - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>IA por usuário</h2>
+    <a href="{% url 'ia:requisicoes' %}" class="btn btn-outline-primary">Requisições</a>
+  </div>
+
+  <p class="text-muted small">
+    Consumo de tokens no mês atual. Quem não tem limite próprio usa a cota padrão de {{ cota_padrao }} tokens.
+  </p>
+
+  {% include 'website/partials/filtro.html' %}
+
+  {% if usuarios %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th class="text-end">Requisições no mês</th>
+              <th style="min-width: 220px;">Tokens no mês</th>
+              <th>Limite</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+              <td><strong>{{ usuario.username }}</strong></td>
+              <td class="text-end">{{ usuario.requisicoes_mes }}</td>
+              <td>
+                <div class="small">{{ usuario.tokens_mes }} de {{ usuario.limite }} ({{ usuario.percentual }}%)</div>
+                <div class="progress" style="height: 6px;">
+                  <div class="progress-bar {% if usuario.percentual >= 80 %}bg-danger{% else %}bg-success{% endif %}"
+                       style="width: {{ usuario.percentual }}%;"></div>
+                </div>
+              </td>
+              <td>
+                {% if usuario.limite_proprio is None %}
+                <span class="badge bg-secondary">padrão</span>
+                {% elif usuario.limite_proprio == 0 %}
+                <span class="badge bg-danger">bloqueado</span>
+                {% else %}
+                <span class="badge bg-primary">próprio</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'ia:cota_usuario' usuario.pk %}" class="btn btn-sm btn-outline-primary">Alterar limite</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">Nenhum usuário encontrado.</div>
+  {% endif %}
+
+  {% include 'website/partials/paginacao.html' %}
+</div>
+{% endblock %}
